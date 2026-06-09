@@ -52,10 +52,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup kubectl
-        uses: actions/setup-kubectl@v4
-        with:
-          version: '1.30.0'
+      - name: Install kubectl
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -L "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl" -o "$HOME/bin/kubectl"
+          chmod +x "$HOME/bin/kubectl"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          kubectl version --client
 
       - name: Configure kubeconfig for dev
         run: |
@@ -78,10 +81,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup kubectl
-        uses: actions/setup-kubectl@v4
-        with:
-          version: '1.30.0'
+      - name: Install kubectl
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -L "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl" -o "$HOME/bin/kubectl"
+          chmod +x "$HOME/bin/kubectl"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          kubectl version --client
 
       - name: Configure kubeconfig for prod
         run: |
