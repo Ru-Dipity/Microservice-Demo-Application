@@ -69,7 +69,7 @@ jobs:
       - name: Deploy manifests to dev cluster
         run: |
           kubectl apply -f Kubernetes/namespace-dev.yaml -f "$KUBE_MANIFEST_DEV"
-          kubectl rollout status deploy --all --namespace=$KUBE_NAMESPACE_DEV --timeout=180s
+          kubectl rollout status deployment -n "$KUBE_NAMESPACE_DEV" -l name --timeout=180s
 
   deploy-prod:
     name: Deploy to Prod
@@ -98,4 +98,4 @@ jobs:
       - name: Deploy manifests to prod cluster
         run: |
           kubectl apply -f Kubernetes/namespace-prod.yaml -f "$KUBE_MANIFEST_PROD"
-          kubectl rollout status deploy --all --namespace=$KUBE_NAMESPACE_PROD --timeout=180s
+          kubectl rollout status deployment -n "$KUBE_NAMESPACE_PROD" -l name --timeout=180s
