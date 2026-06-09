@@ -4,14 +4,15 @@ A minimal microservices demo for running the Sock Shop application on Kubernetes
 
 ## Overview
 
-This folder contains Kubernetes manifests and resources for deploying the Sock Shop sample application. The README provides a quick way to get the application running on a Kubernetes cluster for testing and demonstrations.
+This folder contains Kubernetes manifests and resources for deploying the Sock Shop sample application. The documentation explains how to deploy locally and how to use the GitHub Actions CI/CD pipeline.
 
 ## Requirements
 
-- A Kubernetes cluster (kind, minikube, or cloud provider)
-- `kubectl` configured to access the cluster
+- A Kubernetes cluster (kind, minikube, k3s, or a cloud provider)
+- `kubectl` configured to access the target cluster
+- For GitHub Actions deployment: a reachable Kubernetes API server and valid kubeconfig data stored as GitHub Secrets
 
-## Quick Start
+## Local Deployment
 
 1. Clone the repository and change to this directory:
 
@@ -20,24 +21,86 @@ git clone <your-repo-url>
 cd Sock_Shop
 ```
 
-2. Apply the dev namespace and dev deployment manifests:
+2. Deploy the development environment:
 
 ```bash
 kubectl apply -f Kubernetes/namespace-dev.yaml -f Kubernetes/deployment-dev.yaml
 ```
 
-3. Check pods and services in the dev namespace:
+3. Deploy the production environment:
+
+```bash
+kubectl apply -f Kubernetes/namespace-prod.yaml -f Kubernetes/deployment-prod.yaml
+```
+
+4. Verify the deployment:
 
 ```bash
 kubectl get pods -n sock-shop-dev
 kubectl get svc -n sock-shop-dev
+kubectl get pods -n sock-shop-prod
+kubectl get svc -n sock-shop-prod
 ```
 
-## Notes
+## GitHub Actions CI/CD
 
-- Use `Kubernetes/namespace-dev.yaml` and `Kubernetes/deployment-dev.yaml` for the development environment.
-- Use `Kubernetes/namespace-prod.yaml` and `Kubernetes/deployment-prod.yaml` for the production environment.
-- For production-like setups, review additional manifests under `Kubernetes/` and the `Monitoring/` folder for observability components.
+This repository includes a workflow at `.github/workflows/ci-cd.yaml` with the following behavior:
+
+- `Test` job runs on pushes or pull requests to `main` and `develop` and validates YAML syntax.
+- `deploy-dev` job runs only on the `develop` branch.
+- `deploy-prod` job runs only on the `main` branch.
+
+### Branch usage
+
+- `develop`: deploys `Kubernetes/namespace-dev.yaml` and `Kubernetes/deployment-dev.yaml` using `KUBE_CONFIG_DATA_DEV`.
+- `main`: deploys `Kubernetes/namespace-prod.yaml` and `Kubernetes/deployment-prod.yaml` using `KUBE_CONFIG_DATA_PROD`.
+
+### Required GitHub Secrets
+
+Configure the following repository secrets in GitHub Settings > Secrets:
+
+- `KUBE_CONFIG_DATA_DEV`
+- `KUBE_CONFIG_DATA_PROD`
+
+Each secret must contain the Base64-encoded contents of a kubeconfig file that can access the target Kubernetes cluster.
+
+### Generate the Base64 kubeconfig value
+
+If your kubeconfig file is available locally, run:
+
+```bash
+cat /etc/rancher/k3s/k3s.yaml | base64 -w0
+```
+
+If `base64` does not support `-w0`, use:
+
+```bash
+cat /etc/rancher/k3s/k3s.yaml | base64 | tr -d '\n'
+```
+
+Then paste the resulting single-line string into the appropriate GitHub Secret.
+
+### Important note for GitHub-hosted runners
+
+If you use GitHub-hosted runners, the kubeconfig must point to a Kubernetes API server reachable from the runner.
+
+Do not use a kubeconfig whose `server:` field is `https://127.0.0.1:6443` or `https://localhost:6443` unless the runner is self-hosted on the same machine as the cluster.
+
+If your cluster is local and not reachable from GitHub-hosted runners, use a self-hosted runner in the same network or expose the API server over a reachable address.
+
+## Troubleshooting
+
+### `error validating ... failed to download openapi: Get "http://localhost:8080/openapi/v2"`
+
+This indicates the kubeconfig is pointing at a local API server address that the GitHub runner cannot access. Check the kubeconfig's `server:` value and make sure it is reachable from the runner.
+
+### Dev deploy not triggering
+
+The `deploy-dev` job only runs on the `develop` branch. Push to `develop` to trigger Dev deployment.
+
+### Prod deploy not triggering
+
+The `deploy-prod` job only runs on the `main` branch.
 
 ## Monitoring (Prometheus & Grafana)
 
@@ -72,39 +135,6 @@ kubectl -n monitoring port-forward svc/grafana 3000:80
 
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000
-
-5. Grafana notes:
-
-- Default credentials are often `admin`/`admin`; verify the manifest or secret for the configured password.
-- Add a Prometheus data source in Grafana pointing to `http://localhost:9090` (or the internal service URL when Grafana runs inside the cluster).
-- Import dashboards from the Grafana dashboard directory or use official Sock Shop / Prometheus dashboards.
-
-Alternative access methods
-
-- Port-forward directly to a Grafana pod (for example if the pod exposes 3000):
-
-```bash
-# find the pod name
-kubectl -n monitoring get pods -l app=grafana
-
-# port-forward to the pod's port 3000
-kubectl -n monitoring port-forward pod/<grafana-pod-name> 3000:3000
-```
-
-- If the service is a NodePort (configured in `22-grafana-svc.yaml`), access Grafana using the node's IP and the nodePort (example `31300`):
-
-```bash
-# Replace <node-ip> with your cluster node address
-http://<node-ip>:31300
-```
-
-If you prefer not to port-forward, install a LoadBalancer/Ingress for the services and secure access appropriately.
-
-Discovered ports & default credentials
-
-- Prometheus NodePort: `31090` (service port `9090` -> nodePort `31090`).
-- Grafana NodePort: `31300` (service port `80` -> nodePort `31300`, container `3000`).
-- Grafana default credentials (from `21-grafana-dep.yaml`): **admin / admin**. Change these in production.
 
 ## Contact
 
