@@ -56,8 +56,8 @@ jobs:
 
       - name: Install security tools
         run: |
-          curl -LO https://github.com/stackrox/kube-linter/releases/download/v0.5.0/kube-linter_0.5.0_Linux_x86_64.tar.gz
-          tar -xzf kube-linter_0.5.0_Linux_x86_64.tar.gz
+          curl -LO https://github.com/stackrox/kube-linter/releases/download/v0.8.3/kube-linter-linux.tar.gz
+          tar -xzf kube-linter-linux.tar.gz
           sudo mv kube-linter /usr/local/bin/
           curl -LO https://github.com/zegl/kube-score/releases/download/v1.17.0/kube-score_1.17.0_linux_amd64.tar.gz
           tar -xzf kube-score_1.17.0_linux_amd64.tar.gz
