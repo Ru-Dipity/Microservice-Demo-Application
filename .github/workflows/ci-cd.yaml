@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
+        uses: actions/setup-kubectl@v4
         with:
           version: '1.30.0'
 
@@ -79,7 +79,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
+        uses: actions/setup-kubectl@v4
         with:
           version: '1.30.0'
 
