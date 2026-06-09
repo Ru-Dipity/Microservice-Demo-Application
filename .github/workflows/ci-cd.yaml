@@ -19,6 +19,7 @@ env:
   KUBE_MANIFEST_PROD: Kubernetes/deployment-prod.yaml
   KUBE_NAMESPACE_DEV: sock-shop-dev
   KUBE_NAMESPACE_PROD: sock-shop-prod
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   test:
