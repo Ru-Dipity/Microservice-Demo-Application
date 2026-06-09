@@ -39,7 +39,8 @@ jobs:
           sudo mv kubectl /usr/local/bin/
 
       - name: Validate YAML syntax
-        run: yamllint Kubernetes/**/*.yaml
+        run: |
+          find Kubernetes -type f \( -name '*.yaml' -o -name '*.yml' \) -exec yamllint {} +
 
       - name: Kubernetes dry-run validation
         run: |
