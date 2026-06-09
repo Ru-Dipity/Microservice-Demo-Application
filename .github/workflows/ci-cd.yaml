@@ -46,28 +46,7 @@ jobs:
         run: |
           echo "Skipping kubectl dry-run validation in CI because no Kubernetes API server is available."
 
-  security:
-    name: Security checks
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install security tools
-        run: |
-          curl -LO https://github.com/stackrox/kube-linter/releases/download/v0.8.3/kube-linter-linux.tar.gz
-          tar -xzf kube-linter-linux.tar.gz
-          sudo mv kube-linter /usr/local/bin/
-          curl -LO https://github.com/zegl/kube-score/releases/download/v1.17.0/kube-score_1.17.0_linux_amd64.tar.gz
-          tar -xzf kube-score_1.17.0_linux_amd64.tar.gz
-          sudo mv kube-score /usr/local/bin/
-
-      - name: Run kube-linter
-        run: kube-linter lint Kubernetes
-
-      - name: Run kube-score
-        run: kube-score score --exit-when-higher-than 6 Kubernetes
+  # Security checks job removed per request (kube-linter / kube-score)
 
   build:
     name: Build / package manifests
