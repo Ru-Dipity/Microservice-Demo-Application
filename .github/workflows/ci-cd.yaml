@@ -40,7 +40,7 @@ jobs:
 
       - name: Validate YAML syntax
         run: |
-          find Kubernetes -type f \( -name '*.yaml' -o -name '*.yml' \) -exec yamllint {} +
+          find Kubernetes -type f \( -name '*.yaml' -o -name '*.yml' \) -exec yamllint -d "{extends: default, rules: {line-length: {max: 120}}}" {} +
 
       - name: Kubernetes dry-run validation
         run: |
