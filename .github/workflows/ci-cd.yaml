@@ -32,50 +32,18 @@ jobs:
       - name: Install validation tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3 python3-pip curl
+          sudo apt-get install -y python3 python3-pip
           pip3 install yamllint
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
 
       - name: Validate YAML syntax
         run: |
           find Kubernetes -type f \( -name '*.yaml' -o -name '*.yml' \) -exec yamllint -d "{extends: default, rules: {line-length: {max: 120}}}" {} +
 
-      - name: Kubernetes manifest validation
-        run: |
-          echo "Skipping kubectl dry-run validation in CI because no Kubernetes API server is available."
-
   # Security checks job removed per request (kube-linter / kube-score)
-
-  build:
-    name: Build / package manifests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install kubectl
-        run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-
-      - name: Validate and package manifests
-        run: |
-          mkdir -p artifact
-          cp "$KUBE_MANIFEST_DEV" "$KUBE_MANIFEST_PROD" Kubernetes/namespace-dev.yaml Kubernetes/namespace-prod.yaml artifact/
-
-      - name: Upload prepared manifests artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sock-shop-manifests
-          path: artifact/
 
   deploy-dev:
     name: Deploy to Dev
     runs-on: ubuntu-latest
-    needs: build
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository
@@ -99,7 +67,6 @@ jobs:
   deploy-prod:
     name: Deploy to Prod
     runs-on: ubuntu-latest
-    needs: build
     if: github.ref == 'refs/heads/main'
     environment: production
     steps:
