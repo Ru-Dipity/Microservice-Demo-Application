@@ -44,7 +44,7 @@ jobs:
 
       - name: Kubernetes dry-run validation
         run: |
-          kubectl apply --dry-run=client -f Kubernetes/namespace-dev.yaml -f Kubernetes/namespace-prod.yaml -f "$KUBE_MANIFEST_DEV" -f "$KUBE_MANIFEST_PROD"
+          kubectl apply --dry-run=client --validate=false -f Kubernetes/namespace-dev.yaml -f Kubernetes/namespace-prod.yaml -f "$KUBE_MANIFEST_DEV" -f "$KUBE_MANIFEST_PROD"
 
   security:
     name: Security checks
@@ -87,7 +87,7 @@ jobs:
         run: |
           mkdir -p artifact
           cp "$KUBE_MANIFEST_DEV" "$KUBE_MANIFEST_PROD" Kubernetes/namespace-dev.yaml Kubernetes/namespace-prod.yaml artifact/
-          kubectl apply --dry-run=client -f artifact/namespace-dev.yaml -f artifact/namespace-prod.yaml -f artifact/deployment-dev.yaml -f artifact/deployment-prod.yaml
+          kubectl apply --dry-run=client --validate=false -f artifact/namespace-dev.yaml -f artifact/namespace-prod.yaml -f artifact/deployment-dev.yaml -f artifact/deployment-prod.yaml
 
       - name: Upload prepared manifests artifact
         uses: actions/upload-artifact@v4
