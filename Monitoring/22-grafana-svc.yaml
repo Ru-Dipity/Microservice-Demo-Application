@@ -6,6 +6,9 @@ metadata:
   labels:
     app: grafana
     component: core
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3000"
 spec:
   type: NodePort
   ports:

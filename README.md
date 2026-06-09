@@ -20,22 +20,23 @@ git clone <your-repo-url>
 cd Sock_Shop
 ```
 
-2. Apply the Kubernetes deployment manifest:
+2. Apply the dev namespace and dev deployment manifests:
 
 ```bash
-kubectl apply -f Kubernetes/deployment.yaml
+kubectl apply -f Kubernetes/namespace-dev.yaml -f Kubernetes/deployment-dev.yaml
 ```
 
-3. Check pods and services:
+3. Check pods and services in the dev namespace:
 
 ```bash
-kubectl get pods -n default
-kubectl get svc -n default
+kubectl get pods -n sock-shop-dev
+kubectl get svc -n sock-shop-dev
 ```
 
 ## Notes
 
-- The `Kubernetes/deployment.yaml` file contains the main Deployment and Service manifests used by this quick start.
+- Use `Kubernetes/namespace-dev.yaml` and `Kubernetes/deployment-dev.yaml` for the development environment.
+- Use `Kubernetes/namespace-prod.yaml` and `Kubernetes/deployment-prod.yaml` for the production environment.
 - For production-like setups, review additional manifests under `Kubernetes/` and the `Monitoring/` folder for observability components.
 
 ## Monitoring (Prometheus & Grafana)
