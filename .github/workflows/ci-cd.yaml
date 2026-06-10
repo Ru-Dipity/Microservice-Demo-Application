@@ -102,6 +102,13 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG_DATA_DEV }}" | base64 --decode > "$RUNNER_TEMP/kubeconfig"
           echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
 
+      - name: Create catalogue DB secret in dev
+        run: |
+          kubectl create secret generic catalogue-db-secret \
+            --from-literal=MYSQL_ROOT_PASSWORD="${{ secrets.MYSQL_ROOT_PASSWORD_DEV }}" \
+            -n "$KUBE_NAMESPACE_DEV" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy manifests to dev cluster
         run: |
           kubectl apply -f Kubernetes/namespace-dev.yaml -f "$KUBE_MANIFEST_DEV"
@@ -130,6 +137,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP"
           echo "${{ secrets.KUBE_CONFIG_DATA_PROD }}" | base64 --decode > "$RUNNER_TEMP/kubeconfig"
           echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
+
+      - name: Create catalogue DB secret in prod
+        run: |
+          kubectl create secret generic catalogue-db-secret \
+            --from-literal=MYSQL_ROOT_PASSWORD="${{ secrets.MYSQL_ROOT_PASSWORD_PROD }}" \
+            -n "$KUBE_NAMESPACE_PROD" \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy manifests to prod cluster
         run: |
