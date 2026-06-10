@@ -136,6 +136,14 @@ kubectl -n monitoring port-forward svc/grafana 3000:80
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000
 
+### Grafana Dashboards
+
+- A working Node Exporter dashboard (ID `11074`, "Node Exporter Full") is available and displays host-level CPU/Memory/Disk metrics.
+- To import it manually in Grafana: left menu → `+` → `Import` → enter `11074` → `Load` → select `Prometheus` as the data source → `Import`.
+- Alternatively, browse `Dashboards` → `Manage` and search `Node Exporter` or `Node Exporter Full`.
+- If panels show "No data", verify the data source (Grafana → Configuration → Data Sources → Prometheus) and click `Save & Test`.
+
+
 ## Contact
 
 For questions or contributions, open an issue in the repository.
