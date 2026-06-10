@@ -11,6 +11,7 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 - A Kubernetes cluster (kind, minikube, k3s, or a cloud provider)
 - `kubectl` configured to access the target cluster
 - For GitHub Actions deployment: a reachable Kubernetes API server and valid kubeconfig data stored as GitHub Secrets
+- GitHub Actions repo secrets for database password injection: `MYSQL_ROOT_PASSWORD_DEV` and `MYSQL_ROOT_PASSWORD_PROD`
 
 ## Local Deployment
 
@@ -21,15 +22,21 @@ git clone <your-repo-url>
 cd Sock_Shop
 ```
 
-2. Deploy the development environment:
+2. Create the database secret for the target namespace and deploy the development environment:
 
 ```bash
+kubectl create secret generic catalogue-db-secret \
+  --from-literal=MYSQL_ROOT_PASSWORD="your-dev-password" \
+  -n sock-shop-dev
 kubectl apply -f Kubernetes/namespace-dev.yaml -f Kubernetes/deployment-dev.yaml
 ```
 
-3. Deploy the production environment:
+3. Create the database secret for production and deploy the production environment:
 
 ```bash
+kubectl create secret generic catalogue-db-secret \
+  --from-literal=MYSQL_ROOT_PASSWORD="your-prod-password" \
+  -n sock-shop-prod
 kubectl apply -f Kubernetes/namespace-prod.yaml -f Kubernetes/deployment-prod.yaml
 ```
 
@@ -61,8 +68,11 @@ Configure the following repository secrets in GitHub Settings > Secrets:
 
 - `KUBE_CONFIG_DATA_DEV`
 - `KUBE_CONFIG_DATA_PROD`
+- `MYSQL_ROOT_PASSWORD_DEV`
+- `MYSQL_ROOT_PASSWORD_PROD`
 
-Each secret must contain the Base64-encoded contents of a kubeconfig file that can access the target Kubernetes cluster.
+Each kubeconfig secret must contain the Base64-encoded contents of a kubeconfig file that can access the target Kubernetes cluster.
+The password secrets should contain the actual MySQL root password for the dev and prod namespaces.
 
 ### Generate the Base64 kubeconfig value
 
@@ -88,19 +98,9 @@ Do not use a kubeconfig whose `server:` field is `https://127.0.0.1:6443` or `ht
 
 If your cluster is local and not reachable from GitHub-hosted runners, use a self-hosted runner in the same network or expose the API server over a reachable address.
 
-## Troubleshooting
+### Local secret file handling
 
-### `error validating ... failed to download openapi: Get "http://localhost:8080/openapi/v2"`
-
-This indicates the kubeconfig is pointing at a local API server address that the GitHub runner cannot access. Check the kubeconfig's `server:` value and make sure it is reachable from the runner.
-
-### Dev deploy not triggering
-
-The `deploy-dev` job only runs on the `develop` branch. Push to `develop` to trigger Dev deployment.
-
-### Prod deploy not triggering
-
-The `deploy-prod` job only runs on the `main` branch.
+The repository includes `secrets/catalogue-db-secret.example.yaml` as an example, but the actual sensitive secret file should not be committed to Git. The workflow creates the Kubernetes secret from GitHub Actions secrets at deployment time, so the real password never needs to be stored in the repo.
 
 ## Monitoring (Prometheus & Grafana)
 
