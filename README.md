@@ -49,6 +49,44 @@ kubectl get pods -n sock-shop-prod
 kubectl get svc -n sock-shop-prod
 ```
 
+## Backup CronJob
+
+The file `cronjob.yaml` defines a simple scheduled backup job that runs daily and stores compressed MySQL backups in the `backup-system` namespace.
+
+To deploy the backup CronJob:
+
+```bash
+kubectl create namespace backup-system
+kubectl create secret generic catalogue-db-secret \
+  --from-literal=MYSQL_ROOT_PASSWORD="your-db-password" \
+  -n backup-system
+kubectl apply -f cronjob.yaml
+```
+
+To verify the backup schedule:
+
+```bash
+kubectl get cronjob -n backup-system
+kubectl get jobs -n backup-system
+```
+
+The CronJob stores backups on the `backup-storage-pvc` claim and retains backups for 7 days.
+
+## Rollback
+
+To roll back to a previous application version, use Git to select the desired commit or tag, then reapply the older manifests.
+
+Example rollback steps:
+
+```bash
+git checkout <previous-commit-or-tag>
+kubectl apply -f Kubernetes/namespace-dev.yaml -f Kubernetes/deployment-dev.yaml
+```
+
+If you deploy from GitHub Actions, revert the branch or tag used for the release and re-run the workflow.
+
+If stateful data is affected, restore the database from a backup file before redeploying the previous application version.
+
 ## GitHub Actions CI/CD
 
 This repository includes a workflow at `.github/workflows/ci-cd.yaml` with the following behavior:
@@ -144,6 +182,3 @@ kubectl -n monitoring port-forward svc/grafana 3000:80
 - If panels show "No data", verify the data source (Grafana → Configuration → Data Sources → Prometheus) and click `Save & Test`.
 
 
-## Contact
-
-For questions or contributions, open an issue in the repository.
