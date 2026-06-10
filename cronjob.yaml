@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backup-system
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-storage-pvc
+  namespace: backup-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-db-backup
+  namespace: backup-system
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: mysql-backup
+              image: mysql:5.7
+              env:
+                - name: MYSQL_HOST
+                  value: "catalogue-db.sock-shop-dev.svc.cluster.local"
+                - name: MYSQL_USER
+                  value: "root"
+                - name: MYSQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: catalogue-db-secret
+                      key: MYSQL_ROOT_PASSWORD
+                - name: BACKUP_DIR
+                  value: "/backup"
+                - name: RETENTION_DAYS
+                  value: "7"
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+                  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+                  BACKUP_FILE="${BACKUP_DIR}/catalogue-db-${TIMESTAMP}.sql"
+                  mkdir -p "${BACKUP_DIR}"
+                  echo "Starting MySQL backup: ${BACKUP_FILE}"
+                  mysqldump \
+                    -h "${MYSQL_HOST}" \
+                    -u "${MYSQL_USER}" \
+                    -p"${MYSQL_PASSWORD}" \
+                    --all-databases \
+                    --single-transaction \
+                    --quick \
+                    --lock-tables=false \
+                    > "${BACKUP_FILE}"
+                  gzip "${BACKUP_FILE}"
+                  echo "Compressed backup: ${BACKUP_FILE}.gz"
+                  find "${BACKUP_DIR}" -type f -name '*.sql.gz' -mtime +"${RETENTION_DAYS}" -delete
+                  echo "Old backups older than ${RETENTION_DAYS} days removed"
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: backup-storage-pvc
