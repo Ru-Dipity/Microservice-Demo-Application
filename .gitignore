@@ -1,0 +1,5 @@
+# Ignore local sensitive secrets, but allow example files for onboarding
+/secrets/*
+!/secrets/*.example.yaml
+# Ignore files with .secret.yaml suffix
+*.secret.yaml

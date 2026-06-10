@@ -216,7 +216,10 @@ spec:
           image: weaveworksdemos/catalogue-db:0.3.0
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: fake_password
+              valueFrom:
+                secretKeyRef:
+                  name: catalogue-db-secret
+                  key: MYSQL_ROOT_PASSWORD
             - name: MYSQL_DATABASE
               value: socksdb
           ports:

@@ -43,6 +43,41 @@ jobs:
         run: |
           find Kubernetes -type f \( -name '*.yaml' -o -name '*.yml' \) -exec yamllint -d "{extends: default, rules: {line-length: {max: 120}}}" {} +
 
+  scan:
+    name: Scan Docker images (Trivy)
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+          trivy -v
+
+      - name: Find images in Kubernetes manifests
+        id: find_images
+        run: |
+          imgs=$(grep -RhoP "image:\s*\K.*" Kubernetes || true)
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          echo "$imgs" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Scan images with Trivy (warn only)
+        if: steps.find_images.outputs.list != ''
+        run: |
+          echo "Images to scan:"
+          echo "${{ steps.find_images.outputs.list }}"
+          while IFS= read -r img; do
+            if [ -z "$img" ]; then
+              continue
+            fi
+            echo "Scanning $img"
+            trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress "$img"
+          done <<< "${{ steps.find_images.outputs.list }}"
+
   deploy-dev:
     name: Deploy to Dev
     runs-on: ubuntu-latest
@@ -66,6 +101,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP"
           echo "${{ secrets.KUBE_CONFIG_DATA_DEV }}" | base64 --decode > "$RUNNER_TEMP/kubeconfig"
           echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
+
+      - name: Create catalogue DB secret in dev
+        run: |
+          kubectl create secret generic catalogue-db-secret \
+            --from-literal=MYSQL_ROOT_PASSWORD="${{ secrets.MYSQL_ROOT_PASSWORD_DEV }}" \
+            -n "$KUBE_NAMESPACE_DEV" \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy manifests to dev cluster
         run: |
@@ -95,6 +137,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP"
           echo "${{ secrets.KUBE_CONFIG_DATA_PROD }}" | base64 --decode > "$RUNNER_TEMP/kubeconfig"
           echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
+
+      - name: Create catalogue DB secret in prod
+        run: |
+          kubectl create secret generic catalogue-db-secret \
+            --from-literal=MYSQL_ROOT_PASSWORD="${{ secrets.MYSQL_ROOT_PASSWORD_PROD }}" \
+            -n "$KUBE_NAMESPACE_PROD" \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy manifests to prod cluster
         run: |
