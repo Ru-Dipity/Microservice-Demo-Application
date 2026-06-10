@@ -49,6 +49,39 @@ kubectl get pods -n sock-shop-prod
 kubectl get svc -n sock-shop-prod
 ```
 
+## HTTPS with Let’s Encrypt
+
+This application can be secured with HTTPS using cert-manager and Let’s Encrypt.
+
+1. Install cert-manager:
+
+```bash
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+```
+
+2. Apply the Let's Encrypt ClusterIssuer:
+
+```bash
+kubectl apply -f Kubernetes/cluster-issuer.yaml
+```
+
+3. Deploy the Ingress with TLS enabled for both development and production:
+
+```bash
+kubectl apply -f Kubernetes/ingress-dev.yaml
+kubectl apply -f Kubernetes/ingress-prod.yaml
+```
+
+4. Confirm the certificates are issued:
+
+```bash
+kubectl get certificate -n sock-shop-dev
+kubectl describe certificate sockshop-dev-tls -n sock-shop-dev
+kubectl get certificate -n sock-shop-prod
+kubectl describe certificate sockshop-prod-tls -n sock-shop-prod
+```
+
+
 ## Backup CronJob
 
 The file `cronjob.yaml` defines a simple scheduled backup job that runs daily and stores compressed MySQL backups in the `backup-system` namespace.
