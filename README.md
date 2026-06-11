@@ -6,6 +6,37 @@ A minimal microservices demo for running the Sock Shop application on Kubernetes
 
 This folder contains Kubernetes manifests and resources for deploying the Sock Shop sample application. The documentation explains how to deploy locally and how to use the GitHub Actions CI/CD pipeline.
 
+## Project File Structure
+
+```
+Sock_Shop/
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yaml          # GitHub Actions workflow for CI/CD
+├── Kubernetes/
+│   ├── namespace-dev.yaml      # Development namespace manifest
+│   ├── namespace-prod.yaml     # Production namespace manifest
+│   ├── deployment-dev.yaml     # Development environment deployment manifests
+│   ├── deployment-prod.yaml    # Production environment deployment manifests
+│   ├── ingress-dev.yaml        # Development Ingress with TLS
+│   ├── ingress-prod.yaml       # Production Ingress with TLS
+│   └── cluster-issuer.yaml     # Let's Encrypt ClusterIssuer for cert-manager
+├── Monitoring/
+│   ├── 00-monitoring-ns.yaml   # Monitoring namespace
+│   ├── 01-07-prometheus-*.yaml # Prometheus resources
+│   ├── 08-prometheus-exporter-*.yaml # Node Exporter resources
+│   ├── 10-14-kube-state-*.yaml # Kube State Metrics resources
+│   ├── 20-23-grafana-*.yaml    # Grafana resources
+│   └── 24-26-prometheus-node-exporter-*.yaml # Prometheus Node Exporter
+├── secrets/
+│   └── catalogue-db-secret.example.yaml # Example secret template
+├── Images/
+│   └── Grafana Dashboard Sock-Shop.png # Grafana dashboard screenshot
+├── cronjob.yaml                # Daily database backup CronJob
+├── .gitignore                  # Git ignore rules
+└── README.md                   # This documentation file
+```
+
 ## Requirements
 
 - A Kubernetes cluster (kind, minikube, k3s, or a cloud provider)
