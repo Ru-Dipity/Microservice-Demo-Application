@@ -6,6 +6,83 @@ A minimal microservices demo for running the Sock Shop application on Kubernetes
 
 This folder contains Kubernetes manifests and resources for deploying the Sock Shop sample application. The documentation explains how to deploy locally and how to use the GitHub Actions CI/CD pipeline.
 
+## Architecture Diagram
+
+```mermaid
+graph TB
+    Internet[Internet<br/>User Traffic] -->|HTTPS| Proxmox[Proxmox<br/>Public IP]
+    Proxmox -->|Port Forwarding| K3s[K3s Kubernetes Cluster]
+    
+    subgraph K3s
+        Traefik[Traefik Ingress Controller]
+        subgraph sock-shop-dev
+            IngressDev[Ingress Dev]
+            FrontEndDev[front-end Pod]
+            CatalogueDev[catalogue Pod]
+            CartDev[cart Pod]
+            OrdersDev[orders Pod]
+            PaymentDev[payment Pod]
+            UserDev[user Pod]
+            CatalogueDBDev[catalogue-db Pod]
+            IngressDev --> FrontEndDev
+            FrontEndDev --> CatalogueDev
+            FrontEndDev --> CartDev
+            FrontEndDev --> OrdersDev
+            FrontEndDev --> PaymentDev
+            FrontEndDev --> UserDev
+            CatalogueDev --> CatalogueDBDev
+        end
+        
+        subgraph sock-shop-prod
+            IngressProd[Ingress Prod]
+            FrontEndProd[front-end Pod]
+            CatalogueProd[catalogue Pod]
+            CartProd[cart Pod]
+            OrdersProd[orders Pod]
+            PaymentProd[payment Pod]
+            UserProd[user Pod]
+            CatalogueDBProd[catalogue-db Pod]
+            IngressProd --> FrontEndProd
+            FrontEndProd --> CatalogueProd
+            FrontEndProd --> CartProd
+            FrontEndProd --> OrdersProd
+            FrontEndProd --> PaymentProd
+            FrontEndProd --> UserProd
+            CatalogueProd --> CatalogueDBProd
+        end
+        
+        subgraph Monitoring
+            Prometheus[Prometheus]
+            Grafana[Grafana]
+            Prometheus --> Grafana
+        end
+        
+        subgraph backup-system
+            BackupCronJob[Backup CronJob]
+        end
+        
+        Traefik -->|sock-shop-dev.lukas-gutgemacht.cloud-ip.cc| IngressDev
+        Traefik -->|sock-shop-prod.lukas-gutgemacht.cloud-ip.cc| IngressProd
+    end
+    
+    GitHub[GitHub Actions] -->|Kubeconfig / SSH| K3s
+```
+
+## Architecture Explanation
+
+1. **Traffic Flow**:
+   - User traffic comes from the internet via HTTPS
+   - Hits the Proxmox server's public IP address
+   - Port forwarding routes traffic to the K3s cluster
+   - Traefik Ingress Controller receives the traffic
+   - Based on the hostname, Traefik routes traffic to either `sock-shop-dev` or `sock-shop-prod` namespace
+   - Traffic reaches the respective microservices pods
+
+2. **GitHub Actions CI/CD**:
+   - GitHub Actions workflows deploy to the cluster using kubeconfig secrets
+   - Changes pushed to `develop` branch trigger deployment to `sock-shop-dev`
+   - Changes pushed to `main` branch trigger deployment to `sock-shop-prod`
+
 ## Project File Structure
 
 ```
