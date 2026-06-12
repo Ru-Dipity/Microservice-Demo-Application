@@ -61,8 +61,8 @@ graph TB
             BackupCronJob[Backup CronJob]
         end
         
-        Traefik -->|sock-shop-dev.lukas-gutgemacht.cloud-ip.cc| IngressDev
-        Traefik -->|sock-shop-prod.lukas-gutgemacht.cloud-ip.cc| IngressProd
+        Traefik -->|sock-shop-dev.lukas.cloud-ip.cc| IngressDev
+        Traefik -->|sock-shop-prod.lukas.cloud-ip.cc| IngressProd
         BackupCronJob -.->|Trigger Backup| CatalogueDBDev
         BackupCronJob -.->|Trigger Backup| CatalogueDBProd
     end

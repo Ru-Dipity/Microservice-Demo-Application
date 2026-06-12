@@ -12,10 +12,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - sock-shop-dev.lukas-gutgemacht.cloud-ip.cc
+        - sock-shop-dev.lukas.cloud-ip.cc
       secretName: sockshop-dev-tls
   rules:
-    - host: sock-shop-dev.lukas-gutgemacht.cloud-ip.cc
+    - host: sock-shop-dev.lukas.cloud-ip.cc
       http:
         paths:
           - pathType: Prefix
