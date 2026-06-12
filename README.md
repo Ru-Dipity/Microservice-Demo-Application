@@ -62,11 +62,10 @@ graph TB
         subgraph backup-system
             BackupCronJob[Backup CronJob]
         end
-        
-        Traefik -->|sock-shop-dev.lukas.cloud-ip.cc| IngressDev
-        Traefik -->|sock-shop-prod.lukas.cloud-ip.cc| IngressProd
-        BackupCronJob -.->|Trigger Backup| CatalogueDBDev
-        BackupCronJob -.->|Trigger Backup| CatalogueDBProd
+        Traefik -->|<span style='font-size:24px;'>sock-shop-dev.lukas.cloud-ip.cc</span>| IngressDev
+        Traefik -->|<span style='font-size:24px;'>sock-shop-prod.lukas.cloud-ip.cc</span>| IngressProd
+        BackupCronJob -.->|<span style='font-size:24px;'>Trigger Backup</span>| CatalogueDBDev
+        BackupCronJob -.->|<span style='font-size:24px;'>Trigger Backup</span>| CatalogueDBProd
     end
     
     GitHub[GitHub Actions] -->|Kubeconfig / SSH| K3s
