@@ -10,8 +10,7 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 
 ```mermaid
 graph TB
-    classDef default fill:#fff,stroke:#333,stroke-width:1px,font-size:16px;
-    classDef subgraph fill:#f0f0f0,stroke:#999,stroke-width:1px,font-size:18px;
+    classDef largeFont font-size:18px;
     
     Internet[Internet<br/>User Traffic] -->|HTTPS| Proxmox[Proxmox<br/>Public IP]
     Proxmox -->|Port Forwarding| K3s[K3s Kubernetes Cluster]
@@ -71,6 +70,8 @@ graph TB
     end
     
     GitHub[GitHub Actions] -->|Kubeconfig / SSH| K3s
+    
+    class Internet,Proxmox,K3s,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
 ```
 
 ## Architecture Explanation
