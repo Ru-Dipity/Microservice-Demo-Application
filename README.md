@@ -6,6 +6,125 @@ A minimal microservices demo for running the Sock Shop application on Kubernetes
 
 This folder contains Kubernetes manifests and resources for deploying the Sock Shop sample application. The documentation explains how to deploy locally and how to use the GitHub Actions CI/CD pipeline.
 
+## Architecture Diagram
+
+```mermaid
+graph TB
+    Internet[Internet<br/>User Traffic] -->|HTTPS| Proxmox[Proxmox<br/>Public IP]
+    Proxmox -->|Port Forwarding| K3s[K3s Kubernetes Cluster]
+    
+    subgraph K3s
+        Traefik[Traefik Ingress Controller]
+        subgraph sock-shop-dev
+            IngressDev[Ingress Dev]
+            FrontEndDev[front-end Pod]
+            CatalogueDev[catalogue Pod]
+            CartDev[cart Pod]
+            OrdersDev[orders Pod]
+            PaymentDev[payment Pod]
+            UserDev[user Pod]
+            CatalogueDBDev[catalogue-db Pod]
+            IngressDev --> FrontEndDev
+            FrontEndDev --> CatalogueDev
+            FrontEndDev --> CartDev
+            FrontEndDev --> OrdersDev
+            FrontEndDev --> PaymentDev
+            FrontEndDev --> UserDev
+            CatalogueDev --> CatalogueDBDev
+        end
+        
+        subgraph sock-shop-prod
+            IngressProd[Ingress Prod]
+            FrontEndProd[front-end Pod]
+            CatalogueProd[catalogue Pod]
+            CartProd[cart Pod]
+            OrdersProd[orders Pod]
+            PaymentProd[payment Pod]
+            UserProd[user Pod]
+            CatalogueDBProd[catalogue-db Pod]
+            IngressProd --> FrontEndProd
+            FrontEndProd --> CatalogueProd
+            FrontEndProd --> CartProd
+            FrontEndProd --> OrdersProd
+            FrontEndProd --> PaymentProd
+            FrontEndProd --> UserProd
+            CatalogueProd --> CatalogueDBProd
+        end
+        
+        subgraph Monitoring
+            Prometheus[Prometheus]
+            Grafana[Grafana]
+            Grafana -->|Queries Data| Prometheus
+        end
+        
+        subgraph backup-system
+            BackupCronJob[Backup CronJob]
+        end
+        
+        Traefik -->|sock-shop-dev.lukas.cloud-ip.cc| IngressDev
+        Traefik -->|sock-shop-prod.lukas.cloud-ip.cc| IngressProd
+        BackupCronJob -.->|Trigger Backup| CatalogueDBDev
+        BackupCronJob -.->|Trigger Backup| CatalogueDBProd
+    end
+    
+    GitHub[GitHub Actions] -->|Kubeconfig / SSH| K3s
+```
+
+## Architecture Explanation
+
+1. **Traffic Flow**:
+   - User traffic comes from the internet via HTTPS
+   - Hits the Proxmox server's public IP address
+   - Port forwarding routes traffic to the K3s cluster
+   - Traefik Ingress Controller receives the traffic
+   - Based on the hostname, Traefik routes traffic to either `sock-shop-dev` or `sock-shop-prod` namespace
+   - Traffic reaches the respective microservices pods
+
+2. **Monitoring System**:
+   - Prometheus collects metrics from the cluster
+   - Grafana queries Prometheus for data and visualizes it in dashboards
+
+3. **Backup System**:
+   - Backup CronJob runs daily to back up the databases
+   - It connects to both `catalogue-db` in `sock-shop-dev` and `sock-shop-prod` namespaces
+   - Backups are stored on persistent storage for 7 days
+
+4. **GitHub Actions CI/CD**:
+   - GitHub Actions workflows deploy to the cluster using kubeconfig secrets
+   - Changes pushed to `develop` branch trigger deployment to `sock-shop-dev`
+   - Changes pushed to `main` branch trigger deployment to `sock-shop-prod`
+
+## Project File Structure
+
+```
+Sock_Shop/
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yaml          # GitHub Actions workflow for CI/CD
+├── Kubernetes/
+│   ├── namespace-dev.yaml      # Development namespace manifest
+│   ├── namespace-prod.yaml     # Production namespace manifest
+│   ├── deployment-dev.yaml     # Development environment deployment manifests
+│   ├── deployment-prod.yaml    # Production environment deployment manifests
+│   ├── ingress-dev.yaml        # Development Ingress with TLS
+│   ├── ingress-prod.yaml       # Production Ingress with TLS
+│   └── cluster-issuer.yaml     # Let's Encrypt ClusterIssuer for cert-manager
+├── Monitoring/
+│   ├── 00-monitoring-ns.yaml   # Monitoring namespace
+│   ├── 01-07-prometheus-*.yaml # Prometheus resources
+│   ├── 08-prometheus-exporter-*.yaml # Node Exporter resources
+│   ├── 10-14-kube-state-*.yaml # Kube State Metrics resources
+│   ├── 20-23-grafana-*.yaml    # Grafana resources
+│   └── 24-26-prometheus-node-exporter-*.yaml # Prometheus Node Exporter
+├── secrets/
+│   └── catalogue-db-secret.example.yaml # Example secret template
+├── Images/
+│   └── Grafana Dashboard Sock-Shop.png # Grafana dashboard screenshot
+├── cronjob.yaml                # Daily database backup CronJob
+├── .gitignore                  # Git ignore rules
+└── README.md                   # This documentation file
+```
+
 ## Requirements
 
 - A Kubernetes cluster (kind, minikube, k3s, or a cloud provider)
@@ -48,6 +167,39 @@ kubectl get svc -n sock-shop-dev
 kubectl get pods -n sock-shop-prod
 kubectl get svc -n sock-shop-prod
 ```
+
+## HTTPS with Let’s Encrypt
+
+This application can be secured with HTTPS using cert-manager and Let’s Encrypt.
+
+1. Install cert-manager:
+
+```bash
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+```
+
+2. Apply the Let's Encrypt ClusterIssuer:
+
+```bash
+kubectl apply -f Kubernetes/cluster-issuer.yaml
+```
+
+3. Deploy the Ingress with TLS enabled for both development and production:
+
+```bash
+kubectl apply -f Kubernetes/ingress-dev.yaml
+kubectl apply -f Kubernetes/ingress-prod.yaml
+```
+
+4. Confirm the certificates are issued:
+
+```bash
+kubectl get certificate -n sock-shop-dev
+kubectl describe certificate sockshop-dev-tls -n sock-shop-dev
+kubectl get certificate -n sock-shop-prod
+kubectl describe certificate sockshop-prod-tls -n sock-shop-prod
+```
+
 
 ## Backup CronJob
 

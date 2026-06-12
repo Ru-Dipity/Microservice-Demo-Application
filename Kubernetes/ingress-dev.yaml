@@ -2,12 +2,20 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sock-ingress
+  name: sock-ingress-dev
   namespace: sock-shop-dev
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: letsencrypt
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - sock-shop-dev.lukas.cloud-ip.cc
+      secretName: sockshop-dev-tls
   rules:
-    - host: sockshop.lukas-gutgemacht.cloud-ip.cc
+    - host: sock-shop-dev.lukas.cloud-ip.cc
       http:
         paths:
           - pathType: Prefix

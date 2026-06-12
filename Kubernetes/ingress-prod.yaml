@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sock-ingress-prod
+  namespace: sock-shop-prod
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - sock-shop-prod.lukas.cloud-ip.cc
+      secretName: sockshop-prod-tls
+  rules:
+    - host: sock-shop-prod.lukas.cloud-ip.cc
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: front-end
+                port:
+                  number: 80
