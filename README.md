@@ -10,7 +10,7 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 
 ```mermaid
 graph TB
-    classDef largeFont font-size:26px;
+    classDef largeFont font-size:30px;
     
     Internet[Internet<br/>User Traffic] -->|HTTPS| Proxmox[Proxmox<br/>Public IP]
     Proxmox -->|Port Forwarding| K3s[K3s Kubernetes Cluster]
