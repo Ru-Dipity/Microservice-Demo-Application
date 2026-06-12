@@ -54,7 +54,7 @@ graph TB
         subgraph Monitoring
             Prometheus[Prometheus]
             Grafana[Grafana]
-            Prometheus --> Grafana
+            Grafana -->|Queries Data| Prometheus
         end
         
         subgraph backup-system
@@ -63,6 +63,8 @@ graph TB
         
         Traefik -->|sock-shop-dev.lukas-gutgemacht.cloud-ip.cc| IngressDev
         Traefik -->|sock-shop-prod.lukas-gutgemacht.cloud-ip.cc| IngressProd
+        BackupCronJob -.->|Trigger Backup| CatalogueDBDev
+        BackupCronJob -.->|Trigger Backup| CatalogueDBProd
     end
     
     GitHub[GitHub Actions] -->|Kubeconfig / SSH| K3s
@@ -78,7 +80,16 @@ graph TB
    - Based on the hostname, Traefik routes traffic to either `sock-shop-dev` or `sock-shop-prod` namespace
    - Traffic reaches the respective microservices pods
 
-2. **GitHub Actions CI/CD**:
+2. **Monitoring System**:
+   - Prometheus collects metrics from the cluster
+   - Grafana queries Prometheus for data and visualizes it in dashboards
+
+3. **Backup System**:
+   - Backup CronJob runs daily to back up the databases
+   - It connects to both `catalogue-db` in `sock-shop-dev` and `sock-shop-prod` namespaces
+   - Backups are stored on persistent storage for 7 days
+
+4. **GitHub Actions CI/CD**:
    - GitHub Actions workflows deploy to the cluster using kubeconfig secrets
    - Changes pushed to `develop` branch trigger deployment to `sock-shop-dev`
    - Changes pushed to `main` branch trigger deployment to `sock-shop-prod`
