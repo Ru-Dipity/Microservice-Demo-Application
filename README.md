@@ -12,8 +12,8 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 graph TB
     classDef largeFont font-size:34px;
     
-    Internet[Internet<br/>User Traffic] -->|HTTPS| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|Port Forwarding| K3s[K3s Kubernetes Cluster]
+    Internet[Internet<br/>User Traffic] -->|<span style='font-size:26px;'>HTTPS</span>| Proxmox[Proxmox<br/>Public IP]
+    Proxmox -->|<span style='font-size:26px;'>Port Forwarding</span>| K3s[K3s Kubernetes Cluster]
     
     subgraph K3s
         Traefik[Traefik Ingress Controller]
