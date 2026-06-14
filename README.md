@@ -10,8 +10,10 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 
 ```mermaid
 graph TB
-    Internet[Internet<br/>User Traffic] -->|HTTPS| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|Port Forwarding| K3s[K3s Kubernetes Cluster]
+    classDef largeFont font-size:36px;
+    
+    Internet[Internet<br/>User Traffic] -->|<span style='font-size:28px;'>HTTPS</span>| Proxmox[Proxmox<br/>Public IP]
+    Proxmox -->|<span style='font-size:28px;'>Port Forwarding</span>| K3s[K3s Kubernetes Cluster]
     
     subgraph K3s
         Traefik[Traefik Ingress Controller]
@@ -54,20 +56,21 @@ graph TB
         subgraph Monitoring
             Prometheus[Prometheus]
             Grafana[Grafana]
-            Grafana -->|Queries Data| Prometheus
+            Grafana -->|<span style='font-size:28px;'>Queries Data</span>| Prometheus
         end
         
         subgraph backup-system
             BackupCronJob[Backup CronJob]
         end
-        
-        Traefik -->|sock-shop-dev.lukas.cloud-ip.cc| IngressDev
-        Traefik -->|sock-shop-prod.lukas.cloud-ip.cc| IngressProd
-        BackupCronJob -.->|Trigger Backup| CatalogueDBDev
-        BackupCronJob -.->|Trigger Backup| CatalogueDBProd
+        Traefik -->|<span style='font-size:28px;'>sock-shop-dev.lukas.cloud-ip.cc</span>| IngressDev
+        Traefik -->|<span style='font-size:28px;'>sock-shop-prod.lukas.cloud-ip.cc</span>| IngressProd
+        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBDev
+        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBProd
     end
     
-    GitHub[GitHub Actions] -->|Kubeconfig / SSH| K3s
+    GitHub[GitHub Actions] -->|<span style='font-size:28px;'>Kubeconfig / SSH</span>| K3s
+    
+    class Internet,Proxmox,K3s,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
 ```
 
 ## Architecture Explanation
