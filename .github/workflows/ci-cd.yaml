@@ -81,7 +81,7 @@ jobs:
   deploy-dev:
     name: Deploy to Dev
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, scan]
     if: github.ref == 'refs/heads/develop'
     environment: development
     steps:
@@ -117,7 +117,7 @@ jobs:
   deploy-prod:
     name: Deploy to Prod
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, scan]
     if: github.ref == 'refs/heads/main'
     environment: production
     steps:
