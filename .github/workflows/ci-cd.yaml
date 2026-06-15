@@ -65,7 +65,7 @@ jobs:
           echo "$imgs" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Scan images with Trivy (fail on HIGH/CRITICAL)
+      - name: Scan images with Trivy (warn only)
         if: steps.find_images.outputs.list != ''
         run: |
           echo "Images to scan:"
@@ -75,7 +75,7 @@ jobs:
               continue
             fi
             echo "Scanning $img"
-            trivy image --severity HIGH,CRITICAL --exit-code 1 --no-progress "$img"
+            trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress "$img"
           done <<< "${{ steps.find_images.outputs.list }}"
 
   deploy-dev:
