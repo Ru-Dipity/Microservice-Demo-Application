@@ -97,6 +97,82 @@ graph TB
    - Changes pushed to `develop` branch trigger deployment to `sock-shop-dev`
    - Changes pushed to `main` branch trigger deployment to `sock-shop-prod`
 
+## AWS EKS Deployment with Terraform
+
+This project includes Terraform configuration to deploy the Sock Shop application on Amazon EKS (Elastic Kubernetes Service).
+
+### Prerequisites
+- AWS account with sufficient permissions to create EKS clusters, VPCs, and EC2 instances
+- AWS CLI installed and configured with your credentials
+- Terraform 1.0+ installed
+- `kubectl` installed
+
+### Architecture
+- **VPC**: Private and public subnets across 2 Availability Zones in us-east-1 region
+- **EKS Cluster**: Kubernetes control plane with private and public access enabled
+- **Node Group**: Single managed node group with `t3.small` instances (1-2 nodes)
+- **Cost Optimizations**:
+  - Single NAT gateway instead of multiple AZ gateways
+  - `t3.small` instances (2 vCPU, 2 GiB RAM) instead of larger instance types
+  - Minimum of 1 node, maximum of 2 nodes for flexibility
+
+### Deployment Steps
+
+1. **Initialize Terraform**:
+   ```bash
+   cd Terraform
+   terraform init
+   ```
+
+2. **Review Terraform Plan**:
+   ```bash
+   terraform plan
+   ```
+
+3. **Apply Terraform Configuration**:
+   ```bash
+   terraform apply
+   ```
+   This will create all the AWS infrastructure including VPC, EKS cluster, and node group.
+
+4. **Configure `kubectl`**:
+   ```bash
+   aws eks update-kubeconfig --name <cluster-name> --region us-east-1
+   ```
+
+5. **Verify Cluster Connection**:
+   ```bash
+   kubectl get nodes
+   ```
+
+### Cost Considerations
+- **Monthly Estimate**: ~$141 (EKS control plane $73, 1 t3.small node $15, NAT gateway ~$33, other ~$20)
+- **Cleanup**: Always destroy resources when not in use:
+  ```bash
+  cd Terraform
+  terraform destroy
+  ```
+
+### Troubleshooting
+
+#### Scaling Nodes
+If you need to scale the cluster manually:
+```bash
+aws eks update-nodegroup-config --cluster-name <cluster-name> --nodegroup-name <nodegroup-name> --scaling-config minSize=1,maxSize=2,desiredSize=2 --region us-east-1
+```
+
+#### Common Issues
+- **Node scaling failures**: Verify that desiredSize ≥ minSize and ≤ maxSize
+- **Pending pods**: Check if you have reached the pod limit per node
+- **Terraform version mismatches**: Ensure your local Terraform version matches the required version
+
+### Terraform Outputs
+After deployment, useful information is available as Terraform outputs:
+- `cluster_endpoint`: EKS cluster API endpoint
+- `cluster_name`: Name of the EKS cluster
+- `cluster_security_group_id`: ID of the cluster security group
+- `region`: AWS region where the cluster is deployed
+
 ## Project File Structure
 
 ```
@@ -119,6 +195,13 @@ Sock_Shop/
 │   ├── 10-14-kube-state-*.yaml # Kube State Metrics resources
 │   ├── 20-23-grafana-*.yaml    # Grafana resources
 │   └── 24-26-prometheus-node-exporter-*.yaml # Prometheus Node Exporter
+├── Terraform/
+│   ├── .gitignore             # Terraform ignore rules (state, etc.)
+│   ├── .terraform.lock.hcl    # Terraform dependency lock file
+│   ├── main.tf                # Main Terraform configuration for EKS cluster
+│   ├── outputs.tf             # Terraform outputs (cluster endpoint, etc.)
+│   ├── terraform.tf           # Terraform version and provider requirements
+│   └── variables.tf           # Terraform variables (region, etc.)
 ├── secrets/
 │   └── catalogue-db-secret.example.yaml # Example secret template
 ├── Images/
