@@ -469,3 +469,6 @@ Quick steps to deploy and access monitoring:
 - To import it manually in Grafana: left menu → `+` → `Import` → enter `11074` → `Load` → select `Prometheus` as the data source → `Import`.
 - Alternatively, browse `Dashboards` → `Manage` and search `Node Exporter` or `Node Exporter Full`.
 - If panels show "No data", verify the data source (Grafana → Configuration → Data Sources → Prometheus) and click `Save & Test`.
+
+#### Screenshot
+![Grafana Dashboard Sock-Shop](Images/Grafana%20Dashboard%20Sock-Shop.png)
