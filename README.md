@@ -394,10 +394,12 @@ git reset --hard <healthy-commit-id-or-tag>
 
 # Force-push to the remote repository to align the Single Source of Truth
 git push origin develop -f
+```
 
 Step 2: Reapply Manifests in Order (Kubernetes Level)
 Once the Git history is realigned, re-trigger the deployment by applying the manifests strictly in order of their architectural dependencies (Namespace ➡️ Secrets ➡️ Deployments/Services).
 
+```bash
 cd Sock_Shop
 
 # 1. Ensure the namespace is active
@@ -408,6 +410,7 @@ kubectl apply -f secrets/catalogue-db-secret.yaml
 
 # 3. Apply the application manifests to update the workloads
 kubectl apply -f Kubernetes/deployment-dev.yaml
+```
 
 ## GitHub Actions CI/CD
 
