@@ -2,6 +2,7 @@
 
 A minimal microservices demo for running the Sock Shop application on Kubernetes.
 
+![Sock Shop front-end](Images/Sock%20Shop%20front-end.png)
 ## Overview
 
 This folder contains Kubernetes manifests and resources for deploying the Sock Shop sample application. The documentation explains how to deploy locally (K3s) or on AWS EKS using Terraform, and how to use the GitHub Actions CI/CD pipeline.
