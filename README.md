@@ -160,10 +160,15 @@ Choose one of the deployment options below:
    # Create namespace first
    kubectl apply -f Kubernetes/namespace-dev.yaml
    
-   # Create database secret
+   # Option A: Create database secret using imperative command
    kubectl create secret generic catalogue-db-secret \
      --from-literal=MYSQL_ROOT_PASSWORD="your-dev-password" \
      -n sock-shop-dev
+   
+   # Option B: Create database secret using declarative file (edit the file first to set your password)
+   # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
+   # Edit secrets/catalogue-db-secret.yaml to replace "SET_A_PASSWORD" with a development environment password
+   # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
    kubectl apply -f Kubernetes/deployment-dev.yaml
@@ -174,10 +179,17 @@ Choose one of the deployment options below:
    # Create namespace first
    kubectl apply -f Kubernetes/namespace-prod.yaml
    
-   # Create database secret
+   # Option A: Create database secret using imperative command
    kubectl create secret generic catalogue-db-secret \
      --from-literal=MYSQL_ROOT_PASSWORD="your-prod-password" \
      -n sock-shop-prod
+   
+   # Option B: Create database secret using declarative file (edit the file first to set your password)
+   # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
+   # Edit secrets/catalogue-db-secret.yaml to:
+   #   1. Change namespace from sock-shop-dev to sock-shop-prod
+   #   2. Replace "SET_A_PASSWORD" with a production environment password
+   # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
    kubectl apply -f Kubernetes/deployment-prod.yaml
@@ -246,10 +258,15 @@ Choose one of the deployment options below:
    # Create namespace first
    kubectl apply -f Kubernetes/namespace-dev.yaml
    
-   # Create database secret
+   # Option A: Create database secret using imperative command
    kubectl create secret generic catalogue-db-secret \
      --from-literal=MYSQL_ROOT_PASSWORD="your-dev-password" \
      -n sock-shop-dev
+   
+   # Option B: Create database secret using declarative file (edit the file first to set your password)
+   # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
+   # Edit secrets/catalogue-db-secret.yaml set a password
+   # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
    kubectl apply -f Kubernetes/deployment-dev.yaml
@@ -260,22 +277,35 @@ Choose one of the deployment options below:
    # Create namespace first
    kubectl apply -f Kubernetes/namespace-prod.yaml
    
-   # Create database secret
+   # Option A: Create database secret using imperative command
    kubectl create secret generic catalogue-db-secret \
      --from-literal=MYSQL_ROOT_PASSWORD="your-prod-password" \
      -n sock-shop-prod
+   
+   # Option B: Create database secret using declarative file (edit the file first to set your password)
+   # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
+   # Edit secrets/catalogue-db-secret.yaml to:
+   #   1. Change namespace from sock-shop-dev to sock-shop-prod
+   #   2. Replace "SET_A_PASSWORD" with a production password
+   # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
    kubectl apply -f Kubernetes/deployment-prod.yaml
    ```
 
 #### Cost Considerations
-- **Monthly Estimate**: ~$141 (EKS control plane $73, 1 t3.small node $15, NAT gateway ~$33, other ~$20)
 - **Cleanup**: Always destroy resources when not in use:
   ```bash
   cd Terraform
   terraform destroy
   ```
+
+#### Screenshot
+![AWS EKS Pods](Images/AWS%20EKS%20Pods.png)
+![AWS EKS Nodes Group](Images/AWS%20EKS%20Nodes%20Group.png)
+![AWS EKS Load Balancer](Images/AWS%20EKS%20Load%20Balancer.png)
+
+
 
 #### Troubleshooting
 
@@ -446,3 +476,6 @@ Quick steps to deploy and access monitoring:
 - To import it manually in Grafana: left menu → `+` → `Import` → enter `11074` → `Load` → select `Prometheus` as the data source → `Import`.
 - Alternatively, browse `Dashboards` → `Manage` and search `Node Exporter` or `Node Exporter Full`.
 - If panels show "No data", verify the data source (Grafana → Configuration → Data Sources → Prometheus) and click `Save & Test`.
+
+#### Screenshot
+![Grafana Dashboard Sock-Shop](Images/Grafana%20Dashboard%20Sock-Shop.png)
