@@ -382,18 +382,35 @@ The CronJob stores backups on the `backup-storage-pvc` claim and retains backups
 
 ## Rollback
 
-To roll back to a previous application version, use Git to select the desired commit or tag, then reapply the older manifests.
+To roll back to a previous application version, use Git to select the desired commit ID or tag, then reapply the older manifests.
 
-Example rollback steps:
+### Step 1: Revert the Code Repository (Git Level)
+
+Identify the target healthy Commit ID or Tag (e.g., `6e88cbe`) using `git log --oneline`, then forcefully reset your working branch and align the remote repository.
 
 ```bash
-git checkout <previous-commit-or-tag>
-kubectl apply -f Kubernetes/namespace-dev.yaml -f Kubernetes/deployment-dev.yaml
+# Forcefully reset your local branch to the target healthy commit
+git reset --hard <healthy-commit-id-or-tag>
+
+# Force-push to the remote repository to align the Single Source of Truth
+git push origin develop -f
 ```
 
-If you deploy from GitHub Actions, revert the branch or tag used for the release and re-run the workflow.
+Step 2: Reapply Manifests in Order (Kubernetes Level)
+Once the Git history is realigned, re-trigger the deployment by applying the manifests strictly in order of their architectural dependencies (Namespace ➡️ Secrets ➡️ Deployments/Services).
 
-If stateful data is affected, restore the database from a backup file before redeploying the previous application version.
+```bash
+cd Sock_Shop
+
+# 1. Ensure the namespace is active
+kubectl apply -f Kubernetes/namespace-dev.yaml
+
+# 2. Re-inject the critical database credentials (Required dependency)
+kubectl apply -f secrets/catalogue-db-secret.yaml
+
+# 3. Apply the application manifests to update the workloads
+kubectl apply -f Kubernetes/deployment-dev.yaml
+```
 
 ## GitHub Actions CI/CD
 
