@@ -300,7 +300,7 @@ Choose one of the deployment options below:
   terraform destroy
   ```
 
-#### Screenshot
+
 ![AWS EKS Pods](Images/AWS%20EKS%20Pods.png)
 ![AWS EKS Nodes Group](Images/AWS%20EKS%20Nodes%20Group.png)
 ![AWS EKS Load Balancer](Images/AWS%20EKS%20Load%20Balancer.png)
@@ -477,13 +477,13 @@ Quick steps to deploy and access monitoring:
 ### Accessing the Monitoring Dashboards
 Depending on your network topology, you can expose and access the Prometheus and Grafana User Interfaces (UIs) using either NodePort (recommended for direct local/VPC network access) or Port-Forwarding (for secure, ad-hoc tunneling).
 
-## Method 1: Direct Access via NodePort (Default In-Network Access)
+#### Method 1: Direct Access via NodePort (Default In-Network Access)
 If your development device resides within the same network boundary or routing path as your cluster nodes, the manifests pre-expose the dashboards via static high ports on the node IPs:
-
+ ```bash
 Prometheus UI: http://<YOUR_NODE_IP>:31090
 Grafana UI: http://<YOUR_NODE_IP>:31300
-
-## Method 2: Access via Secure Port-Forwarding (Local Tunneling)
+```
+#### Method 2: Access via Secure Port-Forwarding (Local Tunneling)
 If the cluster nodes are shielded inside a private network or security group without direct ingress access, map the service ports directly to your local device loopback interface:
 
    ```bash
@@ -504,5 +504,4 @@ Once the port-forwarding tunnel is active, open your local browser and navigate 
 - Alternatively, browse `Dashboards` → `Manage` and search `Node Exporter` or `Node Exporter Full`.
 - If panels show "No data", verify the data source (Grafana → Configuration → Data Sources → Prometheus) and click `Save & Test`.
 
-#### Screenshot
 ![Grafana Dashboard Sock-Shop](Images/Grafana%20Dashboard%20Sock-Shop.png)
