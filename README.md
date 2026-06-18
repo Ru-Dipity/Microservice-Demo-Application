@@ -160,10 +160,15 @@ Choose one of the deployment options below:
    # Create namespace first
    kubectl apply -f Kubernetes/namespace-dev.yaml
    
-   # Create database secret
+   # Option A: Create database secret using imperative command
    kubectl create secret generic catalogue-db-secret \
      --from-literal=MYSQL_ROOT_PASSWORD="your-dev-password" \
      -n sock-shop-dev
+   
+   # Option B: Create database secret using declarative file (edit the file first to set your password)
+   # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
+   # Edit secrets/catalogue-db-secret.yaml to replace "fake_password" with your actual password
+   # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
    kubectl apply -f Kubernetes/deployment-dev.yaml
@@ -174,10 +179,17 @@ Choose one of the deployment options below:
    # Create namespace first
    kubectl apply -f Kubernetes/namespace-prod.yaml
    
-   # Create database secret
+   # Option A: Create database secret using imperative command
    kubectl create secret generic catalogue-db-secret \
      --from-literal=MYSQL_ROOT_PASSWORD="your-prod-password" \
      -n sock-shop-prod
+   
+   # Option B: Create database secret using declarative file (edit the file first to set your password)
+   # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
+   # Edit secrets/catalogue-db-secret.yaml to:
+   #   1. Change namespace from sock-shop-dev to sock-shop-prod
+   #   2. Replace "fake_password" with your actual password
+   # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
    kubectl apply -f Kubernetes/deployment-prod.yaml
@@ -246,10 +258,15 @@ Choose one of the deployment options below:
    # Create namespace first
    kubectl apply -f Kubernetes/namespace-dev.yaml
    
-   # Create database secret
+   # Option A: Create database secret using imperative command
    kubectl create secret generic catalogue-db-secret \
      --from-literal=MYSQL_ROOT_PASSWORD="your-dev-password" \
      -n sock-shop-dev
+   
+   # Option B: Create database secret using declarative file (edit the file first to set your password)
+   # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
+   # Edit secrets/catalogue-db-secret.yaml to replace "fake_password" with your actual password
+   # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
    kubectl apply -f Kubernetes/deployment-dev.yaml
@@ -260,10 +277,17 @@ Choose one of the deployment options below:
    # Create namespace first
    kubectl apply -f Kubernetes/namespace-prod.yaml
    
-   # Create database secret
+   # Option A: Create database secret using imperative command
    kubectl create secret generic catalogue-db-secret \
      --from-literal=MYSQL_ROOT_PASSWORD="your-prod-password" \
      -n sock-shop-prod
+   
+   # Option B: Create database secret using declarative file (edit the file first to set your password)
+   # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
+   # Edit secrets/catalogue-db-secret.yaml to:
+   #   1. Change namespace from sock-shop-dev to sock-shop-prod
+   #   2. Replace "fake_password" with your actual password
+   # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
    kubectl apply -f Kubernetes/deployment-prod.yaml
