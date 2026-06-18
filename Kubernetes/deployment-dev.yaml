@@ -544,7 +544,7 @@ kind: Service
 metadata:
   name: queue-master
   annotations:
-    prometheus.io/scrape: "true"
+    prometheus.io/scrape: "false"
   labels:
     name: queue-master
   namespace: sock-shop-dev
