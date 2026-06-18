@@ -167,7 +167,7 @@ Choose one of the deployment options below:
    
    # Option B: Create database secret using declarative file (edit the file first to set your password)
    # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
-   # Edit secrets/catalogue-db-secret.yaml to replace "fake_password" with your actual password
+   # Edit secrets/catalogue-db-secret.yaml to replace "SET_A_PASSWORD" with a development environment password
    # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
@@ -188,7 +188,7 @@ Choose one of the deployment options below:
    # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
    # Edit secrets/catalogue-db-secret.yaml to:
    #   1. Change namespace from sock-shop-dev to sock-shop-prod
-   #   2. Replace "fake_password" with your actual password
+   #   2. Replace "SET_A_PASSWORD" with a production environment password
    # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
@@ -265,7 +265,7 @@ Choose one of the deployment options below:
    
    # Option B: Create database secret using declarative file (edit the file first to set your password)
    # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
-   # Edit secrets/catalogue-db-secret.yaml to replace "fake_password" with your actual password
+   # Edit secrets/catalogue-db-secret.yaml set a password
    # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
@@ -286,7 +286,7 @@ Choose one of the deployment options below:
    # cp secrets/catalogue-db-secret.example.yaml secrets/catalogue-db-secret.yaml
    # Edit secrets/catalogue-db-secret.yaml to:
    #   1. Change namespace from sock-shop-dev to sock-shop-prod
-   #   2. Replace "fake_password" with your actual password
+   #   2. Replace "SET_A_PASSWORD" with a production password
    # kubectl apply -f secrets/catalogue-db-secret.yaml
    
    # Deploy application
@@ -294,7 +294,6 @@ Choose one of the deployment options below:
    ```
 
 #### Cost Considerations
-- **Monthly Estimate**: ~$141 (EKS control plane $73, 1 t3.small node $15, NAT gateway ~$33, other ~$20)
 - **Cleanup**: Always destroy resources when not in use:
   ```bash
   cd Terraform
