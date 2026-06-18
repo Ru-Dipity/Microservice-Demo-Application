@@ -300,6 +300,13 @@ Choose one of the deployment options below:
   terraform destroy
   ```
 
+#### Screenshot
+![AWS EKS Pods](Images/AWS%20EKS%20Pods.png)
+![AWS EKS Nodes Group](Images/AWS%20EKS%20Nodes%20Group.png)
+![AWS EKS Load Balancer](Images/AWS%20EKS%20Load%20Balancer.png)
+
+
+
 #### Troubleshooting
 
 ##### Scaling Nodes
