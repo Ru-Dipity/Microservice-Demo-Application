@@ -382,7 +382,7 @@ The CronJob stores backups on the `backup-storage-pvc` claim and retains backups
 
 ## Rollback
 
-To roll back to a previous application version, use Git to select the desired commit IDor tag, then reapply the older manifests.
+To roll back to a previous application version, use Git to select the desired commit ID or tag, then reapply the older manifests.
 
 ### Step 1: Revert the Code Repository (Git Level)
 
