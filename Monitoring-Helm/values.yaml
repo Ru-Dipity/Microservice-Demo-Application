@@ -1,0 +1,62 @@
+# kube-prometheus-stack Helm chart configuration
+# Chart version: 61.3.1
+# Documentation: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+
+## Global settings
+global:
+  scrape_interval: 15s
+
+## Prometheus settings
+prometheus:
+  enabled: true
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+  service:
+    type: NodePort
+    nodePort: 31090
+
+## Grafana settings
+grafana:
+  enabled: true
+  adminPassword: "prom-operator"
+  service:
+    type: NodePort
+    nodePort: 31300
+  ## Enable the default dashboards shipped by the chart.
+  defaultDashboardsEnabled: true
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: "default"
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+## Alertmanager settings
+alertmanager:
+  enabled: true
+  service:
+    type: ClusterIP
+
+## Node Exporter settings
+prometheus-node-exporter:
+  enabled: true
+  # Disable host networking to avoid port conflicts on a single-node cluster.
+  hostNetwork: false
+  # Keep host PID disabled to match the non-host-network setup.
+  hostPID: false
+
+## Kube State Metrics settings
+kube-state-metrics:
+  enabled: true
+
+## Prometheus Operator settings
+prometheusOperator:
+  enabled: true

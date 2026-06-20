@@ -120,13 +120,9 @@ Sock_Shop/
 │   ├── outputs.tf             # Terraform outputs (cluster endpoint, etc.)
 │   ├── terraform.tf           # Terraform version and provider requirements
 │   └── variables.tf           # Terraform variables (region, etc.)
-├── Monitoring/
-│   ├── 00-monitoring-ns.yaml   # Monitoring namespace
-│   ├── 01-07-prometheus-*.yaml # Prometheus resources
-│   ├── 08-prometheus-exporter-*.yaml # Node Exporter resources
-│   ├── 10-14-kube-state-*.yaml # Kube State Metrics resources
-│   ├── 20-23-grafana-*.yaml    # Grafana resources
-│   └── 24-26-prometheus-node-exporter-*.yaml # Prometheus Node Exporter
+├── Monitoring-Helm/
+│   ├── README.md               # Helm-based monitoring deployment guide
+│   └── values.yaml             # kube-prometheus-stack custom values
 ├── secrets/
 │   └── catalogue-db-secret.example.yaml # Example secret template
 ├── Images/
@@ -461,48 +457,50 @@ The repository includes `secrets/catalogue-db-secret.example.yaml` as an example
 
 ## Monitoring (Prometheus & Grafana)
 
-This repository includes monitoring manifests under the `Monitoring/` directory for deploying Prometheus and Grafana.
+Monitoring is deployed with Helm using the `kube-prometheus-stack` chart and the files in `Monitoring-Helm/`.
 
-Quick steps to deploy and access monitoring:
-
-1. **Apply the monitoring manifests**:
+1. **Add the Prometheus Community Helm repo**:
    ```bash
-   kubectl apply -f Monitoring/
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo update
    ```
 
-2. **Verify monitoring pods and services are running**:
+2. **Deploy using Helm**:
+   ```bash
+   cd Monitoring-Helm
+   
+   # Create namespace if it does not already exist
+   kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+   
+   # Install or upgrade kube-prometheus-stack
+   helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+     --namespace monitoring \
+     -f values.yaml \
+     --version 61.3.1
+   ```
+
+3. **Verify deployment**:
    ```bash
    kubectl get pods -n monitoring
    kubectl get svc -n monitoring
    ```
-### Accessing the Monitoring Dashboards
-Depending on your network topology, you can expose and access the Prometheus and Grafana User Interfaces (UIs) using either NodePort (recommended for direct local/VPC network access) or Port-Forwarding (for secure, ad-hoc tunneling).
 
-#### Method 1: Direct Access via NodePort (Default In-Network Access)
-If your development device resides within the same network boundary or routing path as your cluster nodes, the manifests pre-expose the dashboards via static high ports on the node IPs:
- ```bash
-Prometheus UI: http://<YOUR_NODE_IP>:31090
-Grafana UI: http://<YOUR_NODE_IP>:31300
-```
-#### Method 2: Access via Secure Port-Forwarding (Local Tunneling)
-If the cluster nodes are shielded inside a private network or security group without direct ingress access, map the service ports directly to your local device loopback interface:
+4. **Access Prometheus and Grafana**:
+   - **Prometheus NodePort**: `http://<YOUR_NODE_IP>:31090`
+   - **Grafana NodePort**: `http://<YOUR_NODE_IP>:31300`
+   - **Prometheus port-forward**: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090`
+   - **Grafana port-forward**: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80`
 
-   ```bash
-   # Prometheus UI
-   kubectl -n monitoring port-forward svc/prometheus 9090:9090
+5. **Grafana login**:
+   - Username: `admin`
+   - Password: `prom-operator`
 
-   # Grafana UI
-   kubectl -n monitoring port-forward svc/grafana 3000:80
-   ```
-
-Once the port-forwarding tunnel is active, open your local browser and navigate to:
-   - Prometheus: http://localhost:9090
-   - Grafana: http://localhost:3000
+For more details, see [Monitoring-Helm/README.md](./Monitoring-Helm/README.md).
 
 ### Grafana Dashboards
-- A working Node Exporter dashboard (ID `11074`, "Node Exporter Full") is available and displays host-level CPU/Memory/Disk metrics.
-- To import it manually in Grafana: left menu → `+` → `Import` → enter `11074` → `Load` → select `Prometheus` as the data source → `Import`.
-- Alternatively, browse `Dashboards` → `Manage` and search `Node Exporter` or `Node Exporter Full`.
-- If panels show "No data", verify the data source (Grafana → Configuration → Data Sources → Prometheus) and click `Save & Test`.
+- Kubernetes and infrastructure dashboards are available through the installed monitoring stack.
+- If a panel shows no data, verify that the Prometheus data source in Grafana is healthy.
 
-![Grafana Dashboard Sock-Shop](Images/Grafana%20Dashboard%20Sock-Shop.png)
+![Grafana-Dashboards](Images/Grafana-Dashboards.png)
+
+![Grafana-Dashboard-Cluster](Images/Grafana-Dashboard-Cluster.png)
