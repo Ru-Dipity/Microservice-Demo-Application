@@ -14,7 +14,7 @@ graph TB
     classDef largeFont font-size:36px;
     
     Internet[Internet<br/>User Traffic] -->|<span style='font-size:28px;'>HTTPS</span>| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|<span style='font-size:28px;'>Public IP + Ingress (80/443)</span>| K3s[K3s Kubernetes Cluster]
+    Proxmox -->|<span style='font-size:28px;'>"Public IP + Ingress (80/443)"</span>| K3s[K3s Kubernetes Cluster]
     
     subgraph K3s
         Traefik[Traefik Ingress Controller]
