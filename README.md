@@ -11,22 +11,35 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 
 ```mermaid
 graph TB
-    classDef largeFont font-size:36px;
-    
-    Internet[Internet<br/>User Traffic] -->|<span style='font-size:28px;'>HTTPS</span>| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|<span style='font-size:28px;'>Port Forwarding or nodePort</span>| K3s[K3s Kubernetes Cluster]
-    
-    subgraph K3s
-        Traefik[Traefik Ingress Controller]
-        subgraph sock-shop-dev
-            IngressDev[Ingress Dev]
-            FrontEndDev[front-end Pod]
-            CatalogueDev[catalogue Pod]
-            CartDev[cart Pod]
-            OrdersDev[orders Pod]
-            PaymentDev[payment Pod]
-            UserDev[user Pod]
-            CatalogueDBDev[catalogue-db Pod]
+    classDef nodeFont font-size:28px;
+    classDef nsFont font-size:34px,font-weight:bold;
+
+    GitHub[GitHub<br/>Actions]
+    Internet[Internet<br/>Users]
+    Proxmox[Proxmox<br/>Public IP]
+    Admin[Admin / Operator]
+
+    GitHub -->|Kubeconfig / SSH| K3s
+    Internet -->|HTTPS :443| Proxmox
+
+    subgraph K3s[K3s Kubernetes Cluster]
+        direction TB
+
+        Traefik[Traefik<br/>Ingress Controller]
+
+        subgraph DevBox[" "]
+            direction TB
+            DevNS[sock-shop-dev<br/>Namespace]
+            IngressDev[Ingress Dev<br/>sock-shop-dev.lukas.cloud-ip.cc]
+            FrontEndDev[front-end<br/>Pod]
+            CatalogueDev[catalogue<br/>Pod]
+            CartDev[cart<br/>Pod]
+            OrdersDev[orders<br/>Pod]
+            PaymentDev[payment<br/>Pod]
+            UserDev[user<br/>Pod]
+            CatalogueDBDev[catalogue-db<br/>Pod]
+
+            DevNS --> IngressDev
             IngressDev --> FrontEndDev
             FrontEndDev --> CatalogueDev
             FrontEndDev --> CartDev
@@ -35,16 +48,20 @@ graph TB
             FrontEndDev --> UserDev
             CatalogueDev --> CatalogueDBDev
         end
-        
-        subgraph sock-shop-prod
-            IngressProd[Ingress Prod]
-            FrontEndProd[front-end Pod]
-            CatalogueProd[catalogue Pod]
-            CartProd[cart Pod]
-            OrdersProd[orders Pod]
-            PaymentProd[payment Pod]
-            UserProd[user Pod]
-            CatalogueDBProd[catalogue-db Pod]
+
+        subgraph ProdBox[" "]
+            direction TB
+            ProdNS[sock-shop-prod<br/>Namespace]
+            IngressProd[Ingress Prod<br/>sock-shop-prod.lukas.cloud-ip.cc]
+            FrontEndProd[front-end<br/>Pod]
+            CatalogueProd[catalogue<br/>Pod]
+            CartProd[cart<br/>Pod]
+            OrdersProd[orders<br/>Pod]
+            PaymentProd[payment<br/>Pod]
+            UserProd[user<br/>Pod]
+            CatalogueDBProd[catalogue-db<br/>Pod]
+
+            ProdNS --> IngressProd
             IngressProd --> FrontEndProd
             FrontEndProd --> CatalogueProd
             FrontEndProd --> CartProd
@@ -53,36 +70,49 @@ graph TB
             FrontEndProd --> UserProd
             CatalogueProd --> CatalogueDBProd
         end
-        
-        subgraph Monitoring
+
+        subgraph MonitoringBox[" "]
+            direction TB
+            MonitoringNS[monitoring<br/>Namespace]
             Prometheus[Prometheus]
             Grafana[Grafana]
-            Grafana -->|<span style='font-size:28px;'>Queries Data</span>| Prometheus
+
+            MonitoringNS --> Prometheus
+            MonitoringNS --> Grafana
+            Grafana -->|Queries Data| Prometheus
         end
-        
-        subgraph backup-system
-            BackupCronJob[Backup CronJob]
+
+        subgraph BackupBox[" "]
+            direction TB
+            BackupNS[backup-system<br/>Namespace]
+            BackupCronJob[Backup<br/>CronJob]
+
+            BackupNS --> BackupCronJob
         end
-        Traefik -->|<span style='font-size:28px;'>sock-shop-dev.lukas.cloud-ip.cc</span>| IngressDev
-        Traefik -->|<span style='font-size:28px;'>sock-shop-prod.lukas.cloud-ip.cc</span>| IngressProd
-        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBDev
-        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBProd
     end
-    
-    GitHub[GitHub Actions] -->|<span style='font-size:28px;'>Kubeconfig / SSH</span>| K3s
-    
-    class Internet,Proxmox,K3s,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
+
+    Proxmox -->|Ports 80/443| Traefik
+    Traefik --> IngressDev
+    Traefik --> IngressProd
+    BackupCronJob -.->|Trigger Backup| CatalogueDBDev
+    BackupCronJob -.->|Trigger Backup| CatalogueDBProd
+    Admin -.->|kubectl port-forward / VPN / SSH tunnel| Prometheus
+    Admin -.->|kubectl port-forward / VPN / SSH tunnel| Grafana
+
+    class GitHub,Internet,Proxmox,Admin,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob nodeFont;
+    class DevNS,ProdNS,MonitoringNS,BackupNS nsFont;
 ```
 
 ## Architecture Explanation
 
 1. **Traffic Flow**:
-   - User traffic comes from the internet via HTTPS
-   - Hits the Proxmox server's public IP address
-   - Port forwarding routes traffic to the K3s cluster
-   - Traefik Ingress Controller receives the traffic
+   - Internet users send HTTPS requests to the public domain or IP
+   - The request hits the Proxmox host's public IP address
+   - Traffic reaches Traefik through the exposed Ingress entrypoints on ports `80/443`
    - Based on the hostname, Traefik routes traffic to either `sock-shop-dev` or `sock-shop-prod` namespace
    - Traffic reaches the respective microservices pods
+
+   The application `front-end` Service remains internal as `ClusterIP`, and external access should go through Ingress or another protected reverse proxy layer instead of a public `NodePort`.
 
 2. **Monitoring System**:
    - Prometheus collects metrics from the cluster
@@ -144,6 +174,12 @@ Choose one of the deployment options below:
 - A K3s Kubernetes cluster (or kind, minikube)
 - `kubectl` configured to access the target cluster
 
+#### Access Note
+- Keep application and monitoring Services as `ClusterIP` unless a public service exposure is truly required.
+- Expose the Sock Shop front-end externally through Traefik Ingress on ports `80/443`, or through another protected reverse proxy entrypoint.
+- Access Prometheus and Grafana through `kubectl port-forward`, VPN, SSH tunnel, or another authenticated and restricted ingress path.
+- Avoid exposing monitoring endpoints directly to the public internet.
+
 #### Deployment Steps
 
 1. **Clone the repository and change to this directory**:
@@ -199,6 +235,26 @@ Choose one of the deployment options below:
    kubectl get pods -n sock-shop-prod
    kubectl get svc -n sock-shop-prod
    ```
+
+5. **Access services with `kubectl port-forward` (optional)**:
+   ```bash
+   # Sock Shop dev front-end
+   kubectl port-forward -n sock-shop-dev svc/front-end 8080:80
+
+   # Sock Shop prod front-end
+   kubectl port-forward -n sock-shop-prod svc/front-end 8081:80
+
+   # Prometheus
+   kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+
+   # Grafana
+   kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
+   ```
+   Then open:
+   - Dev front-end: `http://localhost:8080`
+   - Prod front-end: `http://localhost:8081`
+   - Prometheus: `http://localhost:9090`
+   - Grafana: `http://localhost:3000`
 
 ---
 
@@ -486,10 +542,9 @@ Monitoring is deployed with Helm using the `kube-prometheus-stack` chart and the
    ```
 
 4. **Access Prometheus and Grafana**:
-   - **Prometheus NodePort**: `http://<YOUR_NODE_IP>:31090`
-   - **Grafana NodePort**: `http://<YOUR_NODE_IP>:31300`
    - **Prometheus port-forward**: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090`
    - **Grafana port-forward**: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80`
+   - **Protected remote access**: expose them only through VPN, SSH tunnel, or an authenticated ingress/reverse proxy if remote access is required
 
 5. **Grafana login**:
    - Username: `admin`

@@ -65,12 +65,15 @@ Access URLs:
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000
 
-### Option 2: NodePort
+### Option 2: Protected Remote Access
 
-The current `values.yaml` exposes both services through NodePort:
+The current `values.yaml` keeps both services internal as `ClusterIP`.
 
-- Prometheus: http://<NODE_IP>:31090
-- Grafana: http://<NODE_IP>:31300
+If you need remote access, prefer one of these protected options:
+
+- VPN into the cluster network
+- SSH tunnel to a trusted host
+- Authenticated Ingress or reverse proxy with TLS and access restrictions
 
 ## Grafana Login
 
@@ -83,8 +86,8 @@ You can change the admin password in `values.yaml`.
 
 Key settings in `values.yaml`:
 
-- `prometheus.service.nodePort`: NodePort for Prometheus
-- `grafana.service.nodePort`: NodePort for Grafana
+- `prometheus.service.type`: Service type for Prometheus
+- `grafana.service.type`: Service type for Grafana
 - `grafana.adminPassword`: Grafana admin password
 - `alertmanager.enabled`: Enables or disables Alertmanager
 - `prometheus-node-exporter.hostNetwork`: Disabled to avoid host port conflicts on a single-node cluster
