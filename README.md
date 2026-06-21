@@ -13,10 +13,8 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 graph TB
     classDef largeFont font-size:36px;
     
-    Internet[Internet<br/>User Traffic] -->|HTTPS| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|Public IP + Ingress 80/443| K3s[K3s Kubernetes Cluster]
-    Admin[Admin / Operator] -.->|kubectl port-forward / VPN / SSH tunnel| Prometheus
-    Admin -.->|kubectl port-forward / VPN / SSH tunnel| Grafana
+    Internet[Internet<br/>Users] -->|<span style='font-size:28px;'>HTTPS :443</span>| Proxmox[Proxmox<br/>Public IP]
+    Proxmox -->|<span style='font-size:28px;'>Ingress EntryPoints :80/:443</span>| Traefik[Traefik Ingress Controller]
     
     subgraph K3s
         Traefik[Traefik Ingress Controller]
@@ -59,30 +57,29 @@ graph TB
         subgraph Monitoring
             Prometheus[Prometheus]
             Grafana[Grafana]
-            Grafana -->|Queries Data| Prometheus
+            Grafana -->|<span style='font-size:28px;'>Queries Data</span>| Prometheus
         end
         
         subgraph backup-system
             BackupCronJob[Backup CronJob]
         end
-        Traefik -->|sock-shop-dev.lukas.cloud-ip.cc| IngressDev
-        Traefik -->|sock-shop-prod.lukas.cloud-ip.cc| IngressProd
-        BackupCronJob -.->|Trigger Backup| CatalogueDBDev
-        BackupCronJob -.->|Trigger Backup| CatalogueDBProd
+        Traefik -->|<span style='font-size:28px;'>sock-shop-dev.lukas.cloud-ip.cc</span>| IngressDev
+        Traefik -->|<span style='font-size:28px;'>sock-shop-prod.lukas.cloud-ip.cc</span>| IngressProd
+        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBDev
+        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBProd
     end
     
-    GitHub[GitHub Actions] -->|Kubeconfig / SSH| K3s
+    GitHub[GitHub Actions] -->|<span style='font-size:28px;'>Kubeconfig / SSH</span>| K3s
     
-    class Internet,Proxmox,K3s,Admin,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
+    class Internet,Proxmox,K3s,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
 ```
 
 ## Architecture Explanation
 
 1. **Traffic Flow**:
-   - User traffic comes from the internet via HTTPS
-   - Hits the Proxmox server's public IP address
-   - The public IP reaches the K3s cluster through the Ingress entrypoints exposed by Traefik
-   - Traefik Ingress Controller receives the traffic
+   - Internet users send HTTPS requests to the public domain or IP
+   - The request hits the Proxmox host's public IP address
+   - Traffic reaches Traefik through the exposed Ingress entrypoints on ports `80/443`
    - Based on the hostname, Traefik routes traffic to either `sock-shop-dev` or `sock-shop-prod` namespace
    - Traffic reaches the respective microservices pods
 
