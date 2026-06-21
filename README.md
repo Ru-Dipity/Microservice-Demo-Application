@@ -14,7 +14,7 @@ graph TB
     classDef largeFont font-size:36px;
     
     Internet[Internet<br/>User Traffic] -->|<span style='font-size:28px;'>HTTPS</span>| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|<span style='font-size:28px;'>Port Forwarding or nodePort</span>| K3s[K3s Kubernetes Cluster]
+    Proxmox -->|<span style='font-size:28px;'>Public IP + NodePort</span>| K3s[K3s Kubernetes Cluster]
     
     subgraph K3s
         Traefik[Traefik Ingress Controller]
@@ -79,10 +79,12 @@ graph TB
 1. **Traffic Flow**:
    - User traffic comes from the internet via HTTPS
    - Hits the Proxmox server's public IP address
-   - Port forwarding routes traffic to the K3s cluster
+   - The public IP reaches the K3s node directly through exposed `NodePort` services
    - Traefik Ingress Controller receives the traffic
    - Based on the hostname, Traefik routes traffic to either `sock-shop-dev` or `sock-shop-prod` namespace
    - Traffic reaches the respective microservices pods
+
+   If your Proxmox host already has a public IP and the required `NodePort` range is allowed by the firewall, you do not need an extra port forwarding layer for external access.
 
 2. **Monitoring System**:
    - Prometheus collects metrics from the cluster
@@ -143,6 +145,11 @@ Choose one of the deployment options below:
 #### Prerequisites
 - A K3s Kubernetes cluster (or kind, minikube)
 - `kubectl` configured to access the target cluster
+
+#### Access Note
+- If the Proxmox host already has a public IP, you can expose the application directly with Kubernetes `NodePort`.
+- In that setup, additional router or Proxmox port forwarding is not required for external access.
+- Make sure the corresponding `NodePort` ports are allowed by the host firewall and any upstream network ACLs.
 
 #### Deployment Steps
 

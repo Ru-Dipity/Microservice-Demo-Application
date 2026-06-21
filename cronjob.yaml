@@ -23,14 +23,17 @@ metadata:
   namespace: backup-system
 spec:
   schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
       template:
         spec:
           restartPolicy: OnFailure
+          # Deploying multiple containers within a single Pod to share the same persistent volume
           containers:
+            # ----------------- Container 1: MySQL Backup -----------------
             - name: mysql-backup
               image: mysql:5.7
               env:
@@ -41,10 +44,11 @@ spec:
                 - name: MYSQL_PASSWORD
                   valueFrom:
                     secretKeyRef:
+                      # This secret must exist in the same namespace as the CronJob: backup-system.
                       name: catalogue-db-secret
                       key: MYSQL_ROOT_PASSWORD
                 - name: BACKUP_DIR
-                  value: "/backup"
+                  value: "/backup/mysql"
                 - name: RETENTION_DAYS
                   value: "7"
               volumeMounts:
@@ -69,9 +73,45 @@ spec:
                     --lock-tables=false \
                     > "${BACKUP_FILE}"
                   gzip "${BACKUP_FILE}"
-                  echo "Compressed backup: ${BACKUP_FILE}.gz"
+                  echo "Compressed MySQL backup completed."
                   find "${BACKUP_DIR}" -type f -name '*.sql.gz' -mtime +"${RETENTION_DAYS}" -delete
-                  echo "Old backups older than ${RETENTION_DAYS} days removed"
+
+            # ----------------- Container 2: MongoDB Backup -----------------
+            - name: mongodb-backup
+              image: mongo
+              env:
+                - name: MONGO_HOST
+                  value: "carts-db.sock-shop-dev.svc.cluster.local"
+                - name: MONGO_PORT
+                  value: "27017"
+                - name: BACKUP_DIR
+                  value: "/backup/mongodb"
+                - name: RETENTION_DAYS
+                  value: "7"
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+                  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+                  BACKUP_PATH="${BACKUP_DIR}/carts-mongodb-${TIMESTAMP}"
+                  mkdir -p "${BACKUP_DIR}"
+                  echo "Starting MongoDB backup..."
+                  
+                  # Use a MongoDB tools image compatible with the deployed carts-db service.
+                  mongodump \
+                    --host "${MONGO_HOST}" \
+                    --port "${MONGO_PORT}" \
+                    --out "${BACKUP_PATH}"
+                  
+                  tar -czf "${BACKUP_PATH}.tar.gz" -C "$(dirname "${BACKUP_PATH}")" "$(basename "${BACKUP_PATH}")"
+                  rm -rf "${BACKUP_PATH}"
+                  echo "Compressed MongoDB backup completed."
+                  find "${BACKUP_DIR}" -type f -name '*.tar.gz' -mtime +"${RETENTION_DAYS}" -delete
+
           volumes:
             - name: backup-storage
               persistentVolumeClaim:
