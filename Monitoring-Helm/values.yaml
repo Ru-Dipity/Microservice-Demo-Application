@@ -14,16 +14,14 @@ prometheus:
     serviceMonitorSelector: {}
     serviceMonitorNamespaceSelector: {}
   service:
-    type: NodePort
-    nodePort: 31090
+    type: ClusterIP
 
 ## Grafana settings
 grafana:
   enabled: true
   adminPassword: "prom-operator"
   service:
-    type: NodePort
-    nodePort: 31300
+    type: ClusterIP
   ## Enable the default dashboards shipped by the chart.
   defaultDashboardsEnabled: true
   dashboardProviders:

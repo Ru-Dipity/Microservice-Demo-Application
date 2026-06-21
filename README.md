@@ -14,7 +14,7 @@ graph TB
     classDef largeFont font-size:36px;
     
     Internet[Internet<br/>User Traffic] -->|<span style='font-size:28px;'>HTTPS</span>| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|<span style='font-size:28px;'>Public IP + NodePort</span>| K3s[K3s Kubernetes Cluster]
+    Proxmox -->|<span style='font-size:28px;'>Public IP + Ingress (80/443)</span>| K3s[K3s Kubernetes Cluster]
     
     subgraph K3s
         Traefik[Traefik Ingress Controller]
@@ -79,12 +79,12 @@ graph TB
 1. **Traffic Flow**:
    - User traffic comes from the internet via HTTPS
    - Hits the Proxmox server's public IP address
-   - The public IP reaches the K3s node directly through exposed `NodePort` services
+   - The public IP reaches the K3s cluster through the Ingress entrypoints exposed by Traefik
    - Traefik Ingress Controller receives the traffic
    - Based on the hostname, Traefik routes traffic to either `sock-shop-dev` or `sock-shop-prod` namespace
    - Traffic reaches the respective microservices pods
 
-   If your Proxmox host already has a public IP and the required `NodePort` range is allowed by the firewall, you do not need an extra port forwarding layer for external access.
+   The application `front-end` Service remains internal as `ClusterIP`, and external access should go through Ingress or another protected reverse proxy layer instead of a public `NodePort`.
 
 2. **Monitoring System**:
    - Prometheus collects metrics from the cluster
@@ -147,9 +147,10 @@ Choose one of the deployment options below:
 - `kubectl` configured to access the target cluster
 
 #### Access Note
-- If the Proxmox host already has a public IP, you can expose the application directly with Kubernetes `NodePort`.
-- In that setup, additional router or Proxmox port forwarding is not required for external access.
-- Make sure the corresponding `NodePort` ports are allowed by the host firewall and any upstream network ACLs.
+- Keep application and monitoring Services as `ClusterIP` unless a public service exposure is truly required.
+- Expose the Sock Shop front-end externally through Traefik Ingress on ports `80/443`, or through another protected reverse proxy entrypoint.
+- Access Prometheus and Grafana through `kubectl port-forward`, VPN, SSH tunnel, or another authenticated and restricted ingress path.
+- Avoid exposing monitoring endpoints directly to the public internet.
 
 #### Deployment Steps
 
@@ -206,6 +207,26 @@ Choose one of the deployment options below:
    kubectl get pods -n sock-shop-prod
    kubectl get svc -n sock-shop-prod
    ```
+
+5. **Access services with `kubectl port-forward` (optional)**:
+   ```bash
+   # Sock Shop dev front-end
+   kubectl port-forward -n sock-shop-dev svc/front-end 8080:80
+
+   # Sock Shop prod front-end
+   kubectl port-forward -n sock-shop-prod svc/front-end 8081:80
+
+   # Prometheus
+   kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+
+   # Grafana
+   kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
+   ```
+   Then open:
+   - Dev front-end: `http://localhost:8080`
+   - Prod front-end: `http://localhost:8081`
+   - Prometheus: `http://localhost:9090`
+   - Grafana: `http://localhost:3000`
 
 ---
 
@@ -493,10 +514,9 @@ Monitoring is deployed with Helm using the `kube-prometheus-stack` chart and the
    ```
 
 4. **Access Prometheus and Grafana**:
-   - **Prometheus NodePort**: `http://<YOUR_NODE_IP>:31090`
-   - **Grafana NodePort**: `http://<YOUR_NODE_IP>:31300`
    - **Prometheus port-forward**: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090`
    - **Grafana port-forward**: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80`
+   - **Protected remote access**: expose them only through VPN, SSH tunnel, or an authenticated ingress/reverse proxy if remote access is required
 
 5. **Grafana login**:
    - Username: `admin`
