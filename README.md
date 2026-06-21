@@ -14,7 +14,9 @@ graph TB
     classDef largeFont font-size:36px;
     
     Internet[Internet<br/>User Traffic] -->|<span style='font-size:28px;'>HTTPS</span>| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|<span style='font-size:28px;'>"Public IP + Ingress (80/443)"</span>| K3s[K3s Kubernetes Cluster]
+    Proxmox -->|<span style='font-size:28px;'>Public IP + Ingress (80/443)</span>| K3s[K3s Kubernetes Cluster]
+    Admin[Admin / Operator] -.->|<span style='font-size:28px;'>kubectl port-forward / VPN / SSH tunnel</span>| Prometheus
+    Admin -.->|<span style='font-size:28px;'>kubectl port-forward / VPN / SSH tunnel</span>| Grafana
     
     subgraph K3s
         Traefik[Traefik Ingress Controller]
@@ -71,7 +73,7 @@ graph TB
     
     GitHub[GitHub Actions] -->|<span style='font-size:28px;'>Kubeconfig / SSH</span>| K3s
     
-    class Internet,Proxmox,K3s,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
+    class Internet,Proxmox,K3s,Admin,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
 ```
 
 ## Architecture Explanation
