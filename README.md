@@ -13,10 +13,10 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 graph TB
     classDef largeFont font-size:36px;
     
-    Internet[Internet<br/>User Traffic] -->|<span style='font-size:28px;'>HTTPS</span>| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|<span style='font-size:28px;'>Public IP + Ingress (80/443)</span>| K3s[K3s Kubernetes Cluster]
-    Admin[Admin / Operator] -.->|<span style='font-size:28px;'>kubectl port-forward / VPN / SSH tunnel</span>| Prometheus
-    Admin -.->|<span style='font-size:28px;'>kubectl port-forward / VPN / SSH tunnel</span>| Grafana
+    Internet[Internet<br/>User Traffic] -->|HTTPS| Proxmox[Proxmox<br/>Public IP]
+    Proxmox -->|Public IP + Ingress 80/443| K3s[K3s Kubernetes Cluster]
+    Admin[Admin / Operator] -.->|kubectl port-forward / VPN / SSH tunnel| Prometheus
+    Admin -.->|kubectl port-forward / VPN / SSH tunnel| Grafana
     
     subgraph K3s
         Traefik[Traefik Ingress Controller]
@@ -59,19 +59,19 @@ graph TB
         subgraph Monitoring
             Prometheus[Prometheus]
             Grafana[Grafana]
-            Grafana -->|<span style='font-size:28px;'>Queries Data</span>| Prometheus
+            Grafana -->|Queries Data| Prometheus
         end
         
         subgraph backup-system
             BackupCronJob[Backup CronJob]
         end
-        Traefik -->|<span style='font-size:28px;'>sock-shop-dev.lukas.cloud-ip.cc</span>| IngressDev
-        Traefik -->|<span style='font-size:28px;'>sock-shop-prod.lukas.cloud-ip.cc</span>| IngressProd
-        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBDev
-        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBProd
+        Traefik -->|sock-shop-dev.lukas.cloud-ip.cc| IngressDev
+        Traefik -->|sock-shop-prod.lukas.cloud-ip.cc| IngressProd
+        BackupCronJob -.->|Trigger Backup| CatalogueDBDev
+        BackupCronJob -.->|Trigger Backup| CatalogueDBProd
     end
     
-    GitHub[GitHub Actions] -->|<span style='font-size:28px;'>Kubeconfig / SSH</span>| K3s
+    GitHub[GitHub Actions] -->|Kubeconfig / SSH| K3s
     
     class Internet,Proxmox,K3s,Admin,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
 ```
