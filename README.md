@@ -11,22 +11,35 @@ This folder contains Kubernetes manifests and resources for deploying the Sock S
 
 ```mermaid
 graph TB
-    classDef largeFont font-size:36px;
-    
-    Internet[Internet<br/>Users] -->|<span style='font-size:28px;'>HTTPS :443</span>| Proxmox[Proxmox<br/>Public IP]
-    Proxmox -->|<span style='font-size:28px;'>Ingress EntryPoints :80/:443</span>| Traefik[Traefik Ingress Controller]
-    
-    subgraph K3s
-        Traefik[Traefik Ingress Controller]
-        subgraph sock-shop-dev
-            IngressDev[Ingress Dev]
-            FrontEndDev[front-end Pod]
-            CatalogueDev[catalogue Pod]
-            CartDev[cart Pod]
-            OrdersDev[orders Pod]
-            PaymentDev[payment Pod]
-            UserDev[user Pod]
-            CatalogueDBDev[catalogue-db Pod]
+    classDef nodeFont font-size:28px;
+    classDef nsFont font-size:34px,font-weight:bold;
+
+    GitHub[GitHub<br/>Actions]
+    Internet[Internet<br/>Users]
+    Proxmox[Proxmox<br/>Public IP]
+    Admin[Admin / Operator]
+
+    GitHub -->|Kubeconfig / SSH| K3s
+    Internet -->|HTTPS :443| Proxmox
+
+    subgraph K3s[K3s Kubernetes Cluster]
+        direction TB
+
+        Traefik[Traefik<br/>Ingress Controller]
+
+        subgraph DevBox[" "]
+            direction TB
+            DevNS[sock-shop-dev<br/>Namespace]
+            IngressDev[Ingress Dev<br/>sock-shop-dev.lukas.cloud-ip.cc]
+            FrontEndDev[front-end<br/>Pod]
+            CatalogueDev[catalogue<br/>Pod]
+            CartDev[cart<br/>Pod]
+            OrdersDev[orders<br/>Pod]
+            PaymentDev[payment<br/>Pod]
+            UserDev[user<br/>Pod]
+            CatalogueDBDev[catalogue-db<br/>Pod]
+
+            DevNS --> IngressDev
             IngressDev --> FrontEndDev
             FrontEndDev --> CatalogueDev
             FrontEndDev --> CartDev
@@ -35,16 +48,20 @@ graph TB
             FrontEndDev --> UserDev
             CatalogueDev --> CatalogueDBDev
         end
-        
-        subgraph sock-shop-prod
-            IngressProd[Ingress Prod]
-            FrontEndProd[front-end Pod]
-            CatalogueProd[catalogue Pod]
-            CartProd[cart Pod]
-            OrdersProd[orders Pod]
-            PaymentProd[payment Pod]
-            UserProd[user Pod]
-            CatalogueDBProd[catalogue-db Pod]
+
+        subgraph ProdBox[" "]
+            direction TB
+            ProdNS[sock-shop-prod<br/>Namespace]
+            IngressProd[Ingress Prod<br/>sock-shop-prod.lukas.cloud-ip.cc]
+            FrontEndProd[front-end<br/>Pod]
+            CatalogueProd[catalogue<br/>Pod]
+            CartProd[cart<br/>Pod]
+            OrdersProd[orders<br/>Pod]
+            PaymentProd[payment<br/>Pod]
+            UserProd[user<br/>Pod]
+            CatalogueDBProd[catalogue-db<br/>Pod]
+
+            ProdNS --> IngressProd
             IngressProd --> FrontEndProd
             FrontEndProd --> CatalogueProd
             FrontEndProd --> CartProd
@@ -53,25 +70,37 @@ graph TB
             FrontEndProd --> UserProd
             CatalogueProd --> CatalogueDBProd
         end
-        
-        subgraph Monitoring
+
+        subgraph MonitoringBox[" "]
+            direction TB
+            MonitoringNS[monitoring<br/>Namespace]
             Prometheus[Prometheus]
             Grafana[Grafana]
-            Grafana -->|<span style='font-size:28px;'>Queries Data</span>| Prometheus
+
+            MonitoringNS --> Prometheus
+            MonitoringNS --> Grafana
+            Grafana -->|Queries Data| Prometheus
         end
-        
-        subgraph backup-system
-            BackupCronJob[Backup CronJob]
+
+        subgraph BackupBox[" "]
+            direction TB
+            BackupNS[backup-system<br/>Namespace]
+            BackupCronJob[Backup<br/>CronJob]
+
+            BackupNS --> BackupCronJob
         end
-        Traefik -->|<span style='font-size:28px;'>sock-shop-dev.lukas.cloud-ip.cc</span>| IngressDev
-        Traefik -->|<span style='font-size:28px;'>sock-shop-prod.lukas.cloud-ip.cc</span>| IngressProd
-        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBDev
-        BackupCronJob -.->|<span style='font-size:28px;'>Trigger Backup</span>| CatalogueDBProd
     end
-    
-    GitHub[GitHub Actions] -->|<span style='font-size:28px;'>Kubeconfig / SSH</span>| K3s
-    
-    class Internet,Proxmox,K3s,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob,GitHub largeFont;
+
+    Proxmox -->|Ports 80/443| Traefik
+    Traefik --> IngressDev
+    Traefik --> IngressProd
+    BackupCronJob -.->|Trigger Backup| CatalogueDBDev
+    BackupCronJob -.->|Trigger Backup| CatalogueDBProd
+    Admin -.->|kubectl port-forward / VPN / SSH tunnel| Prometheus
+    Admin -.->|kubectl port-forward / VPN / SSH tunnel| Grafana
+
+    class GitHub,Internet,Proxmox,Admin,Traefik,IngressDev,FrontEndDev,CatalogueDev,CartDev,OrdersDev,PaymentDev,UserDev,CatalogueDBDev,IngressProd,FrontEndProd,CatalogueProd,CartProd,OrdersProd,PaymentProd,UserProd,CatalogueDBProd,Prometheus,Grafana,BackupCronJob nodeFont;
+    class DevNS,ProdNS,MonitoringNS,BackupNS nsFont;
 ```
 
 ## Architecture Explanation
